@@ -1,5 +1,33 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { productosApi } from '../../api/client'
+import ProductoImagen from '../../components/ProductoImagen'
+
+/** Reduce la foto a máx. 600 px y la convierte a JPEG (data URL) para guardarla
+ * liviana en la base de datos. */
+function reducirImagen(file, maxLado = 600, calidad = 0.82) {
+  return new Promise((resolve, reject) => {
+    if (!file.type.startsWith('image/')) { reject(new Error('El archivo debe ser una imagen.')); return }
+    const lector = new FileReader()
+    lector.onerror = () => reject(new Error('No se pudo leer el archivo.'))
+    lector.onload = () => {
+      const img = new Image()
+      img.onerror = () => reject(new Error('El archivo no es una imagen válida.'))
+      img.onload = () => {
+        const escala = Math.min(1, maxLado / Math.max(img.width, img.height))
+        const canvas = document.createElement('canvas')
+        canvas.width = Math.round(img.width * escala)
+        canvas.height = Math.round(img.height * escala)
+        const ctx = canvas.getContext('2d')
+        ctx.fillStyle = '#ffffff' // fondo blanco para PNG con transparencia
+        ctx.fillRect(0, 0, canvas.width, canvas.height)
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+        resolve(canvas.toDataURL('image/jpeg', calidad))
+      }
+      img.src = lector.result
+    }
+    lector.readAsDataURL(file)
+  })
+}
 
 export default function ProductoForm({ producto, categorias, onClose, onGuardado }) {
   const esNuevo = !producto
@@ -13,10 +41,30 @@ export default function ProductoForm({ producto, categorias, onClose, onGuardado
     stock: producto?.stock ?? 0,
     stock_minimo: producto?.stock_minimo ?? 5,
     activo: producto?.activo ?? true,
+    imagen_url: producto?.imagen_url || '',
   })
+  const [urlManual, setUrlManual] = useState(
+    producto?.imagen_url && !producto.imagen_url.startsWith('data:') ? producto.imagen_url : ''
+  )
+  const inputArchivo = useRef(null)
   const [error, setError] = useState('')
   const [sending, setSending] = useState(false)
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }))
+
+  async function onArchivo(e) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setError('')
+    try {
+      set('imagen_url', await reducirImagen(file))
+      setUrlManual('')
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
+  const categoriaNombre = categorias.find((c) => String(c.id) === String(form.categoria_id))?.nombre
 
   async function guardar(e) {
     e.preventDefault()
@@ -42,6 +90,30 @@ export default function ProductoForm({ producto, categorias, onClose, onGuardado
         <form onSubmit={guardar}>
           <div className="modal-body">
             {error && <div className="alert alert-error">{error}</div>}
+
+            <div className="form-group" style={{ marginBottom: 0 }}><label>Imagen del producto</label></div>
+            <div className="image-field">
+              <ProductoImagen producto={{ ...form, categoria: categoriaNombre }} size="lg" />
+              <div className="image-field-actions">
+                <input ref={inputArchivo} type="file" accept="image/*" hidden onChange={onArchivo} />
+                <button type="button" className="btn btn-dark btn-sm" onClick={() => inputArchivo.current?.click()}>
+                  Subir foto desde el equipo
+                </button>
+                <input
+                  className="form-control"
+                  placeholder="o pega la URL de la imagen (https://...)"
+                  value={urlManual}
+                  onChange={(e) => { setUrlManual(e.target.value); set('imagen_url', e.target.value.trim()) }}
+                />
+                {form.imagen_url && (
+                  <button type="button" className="btn btn-ghost btn-sm" onClick={() => { set('imagen_url', ''); setUrlManual('') }}>
+                    Quitar imagen
+                  </button>
+                )}
+                <p className="image-field-hint">JPG o PNG. La foto se ajusta automáticamente a 600 px para que cargue rápido.</p>
+              </div>
+            </div>
+
             <div className="form-row">
               <div className="form-group">
                 <label>Código</label>

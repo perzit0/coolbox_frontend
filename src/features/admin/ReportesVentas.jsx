@@ -40,7 +40,7 @@ export default function ReportesVentas() {
         <div className="card-header"><h3 className="card-title">Notas</h3></div>
         <p style={{ color: 'var(--cb-text-soft)', margin: 0 }}>
           Los reportes se calculan sobre las ventas confirmadas en el sistema. Para ver el detalle de cada venta,
-          usa la sección <strong>Ventas</strong> del panel.
+          usa la sección de <strong>historial de ventas</strong>.
         </p>
       </div>
     </>

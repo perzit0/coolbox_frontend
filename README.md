@@ -1,8 +1,9 @@
 # Coolbox — Frontend
 
-SPA React + Vite para el sistema Coolbox. Cuenta con dos accesos separados
-(administrador y usuario de tienda), selección de rol al iniciar sesión y
-un flujo completo de venta en tienda.
+SPA React + Vite para el sistema Coolbox. Tiene un único inicio de sesión
+para todo el personal; si el usuario tiene más de un rol (el Administrador
+incluido), elige con cuál trabajar. Incluye un flujo completo de venta en
+tienda con fotos de producto.
 
 ## Desarrollo local
 
@@ -22,11 +23,14 @@ por lo que cambiarla en Vercel requiere un nuevo despliegue.
 
 ## Rutas
 
-- `/login` — Ingreso del personal de tienda (redirige a selección de rol).
-- `/login-admin` — Ingreso exclusivo del administrador.
-- `/seleccionar-rol` — El usuario elige uno de sus roles.
-- `/admin/*` — Panel administrativo (usuarios, productos, ventas, reportes).
-- `/tienda/*` — Operación en tienda (nueva venta, historial, stock, catálogo).
+- `/login` — Ingreso único para todo el personal.
+- `/seleccionar-rol` — Solo si el usuario tiene más de un rol; aquí se elige también el rol Administrador.
+- `/admin/*` — Panel administrativo (rol activo Administrador): usuarios, productos, ventas, reportes.
+- `/tienda/*` — Operación en tienda (Vendedor, Almacenero, Supervisor de Ventas): nueva venta, historial, catálogo, almacén, reportes.
+
+La opción **Anular** del historial de ventas solo aparece si el rol activo
+tiene el permiso `ventas.anular` (Supervisor de Ventas o Administrador).
+Las ventas no solicitan DNI/RUC del cliente; solo un nombre de referencia opcional.
 
 Cada opción de la barra superior se muestra sólo si el rol activo tiene el
 permiso correspondiente. Los usuarios con más de un rol pueden usar el

@@ -1,3 +1,5 @@
+import ProductoImagen from '../../components/ProductoImagen'
+
 export default function ComprobanteModal({ venta, onClose }) {
   const imprimir = () => window.print()
   return (
@@ -14,7 +16,6 @@ export default function ComprobanteModal({ venta, onClose }) {
             <div><strong>Atendido por:</strong><br/>{venta.usuario_nombre}</div>
             <div><strong>Rol:</strong><br/>{venta.rol}</div>
             <div><strong>Cliente:</strong><br/>{venta.cliente_nombre || '—'}</div>
-            <div><strong>Documento:</strong><br/>{venta.cliente_documento || '—'}</div>
             <div><strong>Método de pago:</strong><br/>{venta.metodo_pago}</div>
             <div><strong>Fecha:</strong><br/>{new Date(venta.fecha).toLocaleString('es-PE')}</div>
           </div>
@@ -23,6 +24,7 @@ export default function ComprobanteModal({ venta, onClose }) {
             <table className="data-table">
               <thead>
                 <tr>
+                  <th style={{ width: 56 }}></th>
                   <th>Código</th>
                   <th>Producto</th>
                   <th>Cantidad</th>
@@ -33,6 +35,7 @@ export default function ComprobanteModal({ venta, onClose }) {
               <tbody>
                 {venta.detalles.map((d) => (
                   <tr key={d.id}>
+                    <td><ProductoImagen producto={{ imagen_url: d.producto_imagen_url, nombre: d.producto_nombre }} size="xs" /></td>
                     <td style={{ fontFamily: 'monospace' }}>{d.producto_codigo}</td>
                     <td>{d.producto_nombre}</td>
                     <td>{d.cantidad}</td>

@@ -40,8 +40,7 @@ export async function api(path, options = {}) {
 }
 
 export const authApi = {
-  loginAdmin: (email, password) => api('/auth/login-admin', { method: 'POST', body: JSON.stringify({ email, password }) }),
-  loginUsuario: (email, password) => api('/auth/login-usuario', { method: 'POST', body: JSON.stringify({ email, password }) }),
+  login: (email, password) => api('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
   seleccionarRol: (rol_id) => api('/auth/seleccionar-rol', { method: 'POST', body: JSON.stringify({ rol_id }) }),
   me: () => api('/auth/me'),
 }

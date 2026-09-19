@@ -1,10 +1,13 @@
 import { useState } from 'react'
 import { authApi } from '../../api/client'
 
-/** Al iniciar sesión (o al pulsar "Cambiar rol") el usuario elige con qué
- * rol operará durante la sesión. El backend firma un nuevo JWT con el rol. */
+/** Al iniciar sesión (o al pulsar "Cambiar rol") el usuario con más de un rol
+ * elige con cuál operará. El rol Administrador también se elige aquí. El
+ * backend firma un nuevo JWT con el rol activo. */
 export default function SeleccionRol({ usuario, onSuccess, onLogout }) {
-  const [rolId, setRolId] = useState(usuario.roles?.[0]?.id || null)
+  // Administrador primero; luego el resto en orden alfabético
+  const roles = [...(usuario.roles || [])].sort((a, b) => (b.es_admin - a.es_admin) || a.nombre.localeCompare(b.nombre))
+  const [rolId, setRolId] = useState(roles[0]?.id || null)
   const [sending, setSending] = useState(false)
   const [error, setError] = useState('')
 
@@ -34,13 +37,14 @@ export default function SeleccionRol({ usuario, onSuccess, onLogout }) {
         {error && <div className="alert alert-error">{error}</div>}
 
         <div className="role-grid">
-          {usuario.roles.map((rol) => (
+          {roles.map((rol) => (
             <button
               key={rol.id}
               type="button"
               className={`role-option ${rolId === rol.id ? 'selected' : ''}`}
               onClick={() => setRolId(rol.id)}
             >
+              {rol.es_admin && <span className="role-tag">Panel administrativo</span>}
               <span className="role-name">{rol.nombre}</span>
               <span className="role-desc">{rol.descripcion}</span>
               <span className="role-permisos">

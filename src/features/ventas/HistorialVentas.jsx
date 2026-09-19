@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react'
 import { ventasApi } from '../../api/client'
 import ComprobanteModal from './ComprobanteModal'
 
-export default function HistorialVentas() {
+/** Historial de ventas. La acción "Anular" solo se muestra si el rol activo
+ * tiene el permiso ventas.anular (Supervisor de Ventas o Administrador). */
+export default function HistorialVentas({ puedeAnular = false }) {
   const [ventas, setVentas] = useState([])
   const [loading, setLoading] = useState(true)
   const [detalle, setDetalle] = useState(null)
@@ -49,7 +51,7 @@ export default function HistorialVentas() {
               <th>Método</th>
               <th>Total</th>
               <th>Estado</th>
-              <th style={{ width: 180 }}>Acciones</th>
+              <th style={{ width: puedeAnular ? 180 : 90 }}>Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -72,7 +74,7 @@ export default function HistorialVentas() {
                 <td>
                   <div className="actions-inline">
                     <button className="btn btn-outline btn-sm" onClick={() => verDetalle(v.id)}>Ver</button>
-                    {v.estado === 'completada' && (
+                    {puedeAnular && v.estado === 'completada' && (
                       <button className="btn btn-danger btn-sm" onClick={() => anular(v)}>Anular</button>
                     )}
                   </div>

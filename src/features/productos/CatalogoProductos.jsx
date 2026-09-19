@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { productosApi } from '../../api/client'
+import ProductoImagen from '../../components/ProductoImagen'
 
 /** Consulta de solo lectura al catálogo. */
 export default function CatalogoProductos() {
@@ -37,6 +38,7 @@ export default function CatalogoProductos() {
           : productos.length === 0 ? <div className="empty-state" style={{ gridColumn: '1/-1' }}>Sin resultados.</div>
           : productos.map((p) => (
             <div key={p.id} className="product-card" style={{ cursor: 'default' }}>
+              <ProductoImagen producto={p} />
               <div className="product-code">{p.codigo}</div>
               <div className="product-name">{p.nombre}</div>
               <div className="product-brand">{p.marca} · {p.categoria}</div>

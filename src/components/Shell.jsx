@@ -4,7 +4,7 @@ import { NavLink } from 'react-router-dom'
 export default function Shell({ sesion, onLogout, onCambiarRol, children }) {
   const { usuario, rol_activo } = sesion
   const permisos = new Set(rol_activo?.permisos || [])
-  const esAdmin = usuario.es_administrador
+  const esAdmin = !!rol_activo?.es_admin
 
   // Ítems de navegación: se filtran por permiso del rol activo
   const items = esAdmin
@@ -20,6 +20,7 @@ export default function Shell({ sesion, onLogout, onCambiarRol, children }) {
         { to: '/tienda/ventas', label: 'Historial de Ventas', perm: 'ventas.ver' },
         { to: '/tienda/productos', label: 'Catálogo', perm: 'productos.ver' },
         { to: '/tienda/stock', label: 'Almacén', perm: 'stock.actualizar' },
+        { to: '/tienda/reportes', label: 'Reportes', perm: 'reportes.ver' },
       ]
 
   const visibles = items.filter((it) => !it.perm || permisos.has(it.perm))
@@ -45,7 +46,7 @@ export default function Shell({ sesion, onLogout, onCambiarRol, children }) {
             <div className="user-name">{usuario.nombre_completo}</div>
             <div className="user-role">{rol_activo?.nombre || 'Sin rol activo'}</div>
           </div>
-          {!esAdmin && usuario.roles.length > 1 && (
+          {usuario.roles.length > 1 && (
             <button type="button" className="btn btn-ghost btn-sm" onClick={onCambiarRol} style={{ color: '#fff' }}>
               Cambiar rol
             </button>

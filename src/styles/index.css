@@ -808,6 +808,59 @@ select.form-control { cursor: pointer; }
   transform: translateY(-2px);
 }
 .product-card.oos { opacity: 0.55; cursor: not-allowed; }
+
+/* ---- Imágenes de producto ---- */
+.prod-img {
+  background: #fff;
+  border: 1px solid var(--cb-border);
+  border-radius: var(--cb-radius);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.prod-img img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.prod-img-md { width: 100%; aspect-ratio: 4 / 3; padding: 0.5rem; }
+.prod-img-lg { width: 100%; aspect-ratio: 4 / 3; max-height: 220px; padding: 0.75rem; }
+.prod-img-xs { width: 44px; height: 44px; padding: 3px; }
+.prod-img-placeholder {
+  flex-direction: column;
+  gap: 0.35rem;
+  color: #9ca3af;
+  background: repeating-linear-gradient(135deg, #fafafa 0 10px, #f4f4f5 10px 20px);
+}
+.prod-img-placeholder svg { width: 42%; max-width: 72px; height: auto; }
+.prod-img-xs.prod-img-placeholder svg { width: 70%; }
+.prod-img-brand {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+.image-field {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 1rem;
+  align-items: start;
+  margin-bottom: 1rem;
+}
+.image-field-actions { display: flex; flex-direction: column; gap: 0.5rem; }
+.image-field-hint { font-size: 0.75rem; color: var(--cb-muted); margin: 0; }
+@media (max-width: 560px) { .image-field { grid-template-columns: 1fr; } }
+
+.role-option .role-tag {
+  align-self: flex-start;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: var(--cb-black);
+  color: #fff;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+}
 .product-code {
   font-family: 'Courier New', monospace;
   font-size: 0.75rem;
@@ -875,7 +928,7 @@ select.form-control { cursor: pointer; }
 }
 .cart-item {
   display: grid;
-  grid-template-columns: 1fr auto auto;
+  grid-template-columns: auto 1fr auto auto;
   gap: 0.5rem;
   padding: 0.65rem;
   border-radius: var(--cb-radius);

@@ -1,9 +1,15 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
 import { authApi } from '../../api/client'
 
-/** Ingreso del personal de tienda. Redirige a selección de rol. */
-export default function LoginUsuario({ onSuccess }) {
+const DEMO = [
+  { email: 'admin@coolbox.com.pe', password: 'Admin123!', rol: 'Administrador' },
+  { email: 'jperezl@coolbox.com.pe', password: 'Vendedor123!', rol: 'Vendedor' },
+  { email: 'mtorresr@coolbox.com.pe', password: 'Supervisor123!', rol: 'Supervisor de Ventas' },
+]
+
+/** Ingreso único para todo el personal. El rol (incluido Administrador)
+ * se define después, en la pantalla de selección de rol. */
+export default function Login({ onSuccess }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -14,7 +20,7 @@ export default function LoginUsuario({ onSuccess }) {
     setError('')
     setSending(true)
     try {
-      const result = await authApi.loginUsuario(email, password)
+      const result = await authApi.login(email, password)
       onSuccess(result)
     } catch (err) {
       setError(err.detail || 'No fue posible iniciar sesión.')
@@ -28,24 +34,27 @@ export default function LoginUsuario({ onSuccess }) {
       <aside className="login-hero hero-black">
         <div className="hero-brand">
           <span className="hero-brand-mark">COOLBOX</span>
-          <span className="hero-brand-name">Sistema de Tienda</span>
+          <span className="hero-brand-name">Sistema de Gestión de Tienda</span>
         </div>
         <div className="hero-content">
-          <p className="hero-eyebrow">Personal de Tienda</p>
+          <p className="hero-eyebrow">Personal Coolbox</p>
           <h1>Bienvenido de vuelta</h1>
-          <p>Ingresa con el correo que recibiste del administrador. Al iniciar sesión podrás elegir el rol con el que trabajarás durante tu turno.</p>
+          <p>
+            Ingresa con tu correo institucional. Si tienes más de un rol asignado,
+            elegirás con cuál trabajar en esta sesión.
+          </p>
         </div>
         <div className="hero-features">
-          <div className="hero-feature">Registro rápido de ventas en tienda</div>
-          <div className="hero-feature">Consulta de stock y catálogo actualizado</div>
-          <div className="hero-feature">Historial de ventas del día</div>
+          <div className="hero-feature">Un solo acceso para todo el personal</div>
+          <div className="hero-feature">Cada rol habilita solo sus propias opciones</div>
+          <div className="hero-feature">Ventas, catálogo, stock y reportes en un solo lugar</div>
         </div>
       </aside>
 
       <section className="login-form-side">
         <div className="login-form-card">
-          <h2>Ingreso de Usuario</h2>
-          <p className="subtitle">Personal de tienda: vendedores, cajeros, almaceneros y supervisores.</p>
+          <h2>Iniciar sesión</h2>
+          <p className="subtitle">Administradores, vendedores, almaceneros y supervisores de ventas.</p>
 
           <form onSubmit={submit}>
             {error && <div className="alert alert-error">{error}</div>}
@@ -77,25 +86,20 @@ export default function LoginUsuario({ onSuccess }) {
             </div>
 
             <button type="submit" className="btn btn-primary btn-block btn-lg" disabled={sending}>
-              {sending ? <span className="spinner" /> : 'Ingresar al sistema'}
+              {sending ? <span className="spinner" /> : 'Ingresar'}
             </button>
           </form>
 
-          <div className="login-switcher">
-            ¿Eres administrador? <Link to="/login-admin">Ingresar al Panel Administrativo</Link>
-          </div>
-
           <div className="demo-credentials">
             <div className="demo-credentials-title">Credenciales de prueba</div>
-            <div className="demo-cred-row">
-              <span
-                className="demo-clickable"
-                onClick={() => { setEmail('jperezl@coolbox.com.pe'); setPassword('Vendedor123!') }}
-              >
-                jperezl@coolbox.com.pe
-              </span>
-              <span>Vendedor123!</span>
-            </div>
+            {DEMO.map((d) => (
+              <div className="demo-cred-row" key={d.email}>
+                <span className="demo-clickable" onClick={() => { setEmail(d.email); setPassword(d.password) }}>
+                  {d.email}
+                </span>
+                <span>{d.rol}</span>
+              </div>
+            ))}
           </div>
         </div>
       </section>

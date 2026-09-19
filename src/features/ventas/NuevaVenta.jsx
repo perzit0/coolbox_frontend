@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { productosApi, ventasApi } from '../../api/client'
 import ComprobanteModal from './ComprobanteModal'
+import ProductoImagen from '../../components/ProductoImagen'
 
 export default function NuevaVenta({ sesion }) {
   const [productos, setProductos] = useState([])
@@ -9,7 +10,6 @@ export default function NuevaVenta({ sesion }) {
   const [categoriaFiltro, setCategoriaFiltro] = useState('')
   const [carrito, setCarrito] = useState({}) // { producto_id: {producto, cantidad} }
   const [clienteNombre, setClienteNombre] = useState('')
-  const [clienteDoc, setClienteDoc] = useState('')
   const [metodoPago, setMetodoPago] = useState('efectivo')
   const [error, setError] = useState('')
   const [enviando, setEnviando] = useState(false)
@@ -58,13 +58,12 @@ export default function NuevaVenta({ sesion }) {
     try {
       const payload = {
         cliente_nombre: clienteNombre || null,
-        cliente_documento: clienteDoc || null,
         metodo_pago: metodoPago,
         items: totales.items.map((it) => ({ producto_id: it.producto.id, cantidad: it.cantidad })),
       }
       const r = await ventasApi.crear(payload)
       setComprobante(r.venta)
-      setCarrito({}); setClienteNombre(''); setClienteDoc(''); setMetodoPago('efectivo')
+      setCarrito({}); setClienteNombre(''); setMetodoPago('efectivo')
       cargar()
     } catch (err) {
       setError(err.detail || 'No fue posible registrar la venta.')
@@ -95,6 +94,7 @@ export default function NuevaVenta({ sesion }) {
         <div className="product-grid">
           {productos.map((p) => (
             <div key={p.id} className={`product-card ${p.stock === 0 ? 'oos' : ''}`} onClick={() => agregar(p)}>
+              <ProductoImagen producto={p} />
               <div className="product-code">{p.codigo}</div>
               <div className="product-name">{p.nombre}</div>
               <div className="product-brand">{p.marca} · {p.categoria}</div>
@@ -115,6 +115,7 @@ export default function NuevaVenta({ sesion }) {
               <div className="cart-empty">Aún no agregas productos.<br/>Haz clic en un producto para añadirlo.</div>
             ) : totales.items.map((it) => (
               <div key={it.producto.id} className="cart-item">
+                <ProductoImagen producto={it.producto} size="xs" />
                 <div>
                   <div className="cart-item-name">{it.producto.nombre}</div>
                   <div className="cart-item-price">S/ {it.producto.precio.toFixed(2)} c/u</div>
@@ -133,11 +134,8 @@ export default function NuevaVenta({ sesion }) {
           </div>
 
           <div className="form-group" style={{ marginBottom: 0 }}>
-            <label>Cliente (opcional)</label>
-            <input className="form-control" placeholder="Nombre" value={clienteNombre} onChange={(e) => setClienteNombre(e.target.value)} />
-          </div>
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <input className="form-control" placeholder="DNI/RUC" value={clienteDoc} onChange={(e) => setClienteDoc(e.target.value)} />
+            <label>Nombre del cliente (opcional)</label>
+            <input className="form-control" placeholder="Ej. Carlos Ramírez" maxLength={180} value={clienteNombre} onChange={(e) => setClienteNombre(e.target.value)} />
           </div>
           <div className="form-group" style={{ marginBottom: 0 }}>
             <label>Método de pago</label>

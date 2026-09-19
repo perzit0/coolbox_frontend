@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { productosApi } from '../../api/client'
 import ProductoForm from './ProductoForm'
+import ProductoImagen from '../../components/ProductoImagen'
 
 export default function GestionProductos() {
   const [productos, setProductos] = useState([])
@@ -38,7 +39,7 @@ export default function GestionProductos() {
       <div className="page-header">
         <div>
           <h1 className="page-title">Catálogo de Productos</h1>
-          <p className="page-subtitle">Administra el catálogo, precios y stock de la tienda.</p>
+          <p className="page-subtitle">Administra el catálogo, fotos, precios y stock de la tienda.</p>
         </div>
         <button className="btn btn-primary" onClick={() => { setEditando(null); setFormAbierto(true) }}>
           Registrar nuevo producto
@@ -64,6 +65,7 @@ export default function GestionProductos() {
         <table className="data-table">
           <thead>
             <tr>
+              <th style={{ width: 64 }}>Foto</th>
               <th>Código</th>
               <th>Producto</th>
               <th>Categoría</th>
@@ -76,11 +78,12 @@ export default function GestionProductos() {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan="8" className="empty-state">Cargando…</td></tr>
+              <tr><td colSpan="9" className="empty-state">Cargando…</td></tr>
             ) : productos.length === 0 ? (
-              <tr><td colSpan="8" className="empty-state">Sin productos coincidentes.</td></tr>
+              <tr><td colSpan="9" className="empty-state">Sin productos coincidentes.</td></tr>
             ) : productos.map((p) => (
               <tr key={p.id}>
+                <td><ProductoImagen producto={p} size="xs" /></td>
                 <td style={{ fontFamily: 'monospace', fontSize: '0.82rem' }}>{p.codigo}</td>
                 <td><strong>{p.nombre}</strong></td>
                 <td>{p.categoria}</td>

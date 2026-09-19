@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { productosApi } from '../../api/client'
+import ProductoImagen from '../../components/ProductoImagen'
 
 /** Vista para el rol Almacenero: ajustar stock (entradas / salidas). */
 export default function GestionStock() {
@@ -55,6 +56,7 @@ export default function GestionStock() {
         <table className="data-table">
           <thead>
             <tr>
+              <th style={{ width: 64 }}></th>
               <th>Código</th>
               <th>Producto</th>
               <th>Stock actual</th>
@@ -63,9 +65,10 @@ export default function GestionStock() {
             </tr>
           </thead>
           <tbody>
-            {loading ? <tr><td colSpan="5" className="empty-state">Cargando…</td></tr>
+            {loading ? <tr><td colSpan="6" className="empty-state">Cargando…</td></tr>
               : productos.map((p) => (
                 <tr key={p.id}>
+                  <td><ProductoImagen producto={p} size="xs" /></td>
                   <td style={{ fontFamily: 'monospace' }}>{p.codigo}</td>
                   <td><strong>{p.nombre}</strong></td>
                   <td>
