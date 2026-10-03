@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { authApi } from '../../api/client'
+import Icon from '../../components/Icon'
+import { PasswordInput } from '../../components/PasswordFields'
 
 const DEMO = [
   { email: 'admin@coolbox.com.pe', password: 'Admin123!', rol: 'Administrador' },
-  { email: 'jperezl@coolbox.com.pe', password: 'Vendedor123!', rol: 'Vendedor' },
+  { email: 'jperezl@coolbox.com.pe', password: 'Vendedor123!', rol: 'Vendedor / Almacenero' },
   { email: 'mtorresr@coolbox.com.pe', password: 'Supervisor123!', rol: 'Supervisor de Ventas' },
 ]
 
@@ -14,14 +16,14 @@ export default function Login({ onSuccess }) {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [sending, setSending] = useState(false)
+  const [verDemo, setVerDemo] = useState(false)
 
   async function submit(e) {
     e.preventDefault()
     setError('')
     setSending(true)
     try {
-      const result = await authApi.login(email, password)
-      onSuccess(result)
+      onSuccess(await authApi.login(email.trim(), password))
     } catch (err) {
       setError(err.detail || 'No fue posible iniciar sesión.')
     } finally {
@@ -47,7 +49,7 @@ export default function Login({ onSuccess }) {
         <div className="hero-features">
           <div className="hero-feature">Un solo acceso para todo el personal</div>
           <div className="hero-feature">Cada rol habilita solo sus propias opciones</div>
-          <div className="hero-feature">Ventas, catálogo, stock y reportes en un solo lugar</div>
+          <div className="hero-feature">Ventas, catálogo con SKU, kardex y reportes en un solo lugar</div>
         </div>
       </aside>
 
@@ -56,47 +58,40 @@ export default function Login({ onSuccess }) {
           <h2>Iniciar sesión</h2>
           <p className="subtitle">Administradores, vendedores, almaceneros y supervisores de ventas.</p>
 
-          <form onSubmit={submit}>
+          <form onSubmit={submit} noValidate>
             {error && <div className="alert alert-error">{error}</div>}
 
             <div className="form-group">
-              <label>Correo institucional</label>
-              <input
-                type="email"
-                className="form-control"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="nombre@coolbox.com.pe"
-                autoComplete="email"
-                required
-              />
+              <label htmlFor="login-email">Correo institucional</label>
+              <input id="login-email" type="email" className="form-control" value={email}
+                onChange={(e) => setEmail(e.target.value)} placeholder="nombre@coolbox.com.pe"
+                autoComplete="username" autoFocus required />
             </div>
 
             <div className="form-group">
-              <label>Contraseña</label>
-              <input
-                type="password"
-                className="form-control"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Ingrese su contraseña"
-                autoComplete="current-password"
-                required
-              />
+              <label htmlFor="login-password">Contraseña</label>
+              <PasswordInput id="login-password" value={password} onChange={setPassword}
+                placeholder="Ingrese su contraseña" autoComplete="current-password" />
             </div>
 
-            <button type="submit" className="btn btn-primary btn-block btn-lg" disabled={sending}>
+            <button type="submit" className="btn btn-primary btn-block btn-lg" disabled={sending || !email || !password}>
               {sending ? <span className="spinner" /> : 'Ingresar'}
             </button>
           </form>
 
+          <p className="login-help">
+            <Icon name="info" size={14} /> ¿Olvidaste tu contraseña? Solicita al administrador que la restablezca.
+          </p>
+
           <div className="demo-credentials">
-            <div className="demo-credentials-title">Credenciales de prueba</div>
-            {DEMO.map((d) => (
+            <button type="button" className="demo-toggle" onClick={() => setVerDemo((v) => !v)}>
+              Credenciales de prueba <Icon name={verDemo ? 'chevronLeft' : 'chevronRight'} size={14} />
+            </button>
+            {verDemo && DEMO.map((d) => (
               <div className="demo-cred-row" key={d.email}>
-                <span className="demo-clickable" onClick={() => { setEmail(d.email); setPassword(d.password) }}>
+                <button type="button" className="demo-clickable" onClick={() => { setEmail(d.email); setPassword(d.password) }}>
                   {d.email}
-                </span>
+                </button>
                 <span>{d.rol}</span>
               </div>
             ))}

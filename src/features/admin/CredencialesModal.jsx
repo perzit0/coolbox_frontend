@@ -1,36 +1,37 @@
+import { useState } from 'react'
+import Icon from '../../components/Icon'
+import Modal from '../../components/Modal'
+
 export default function CredencialesModal({ titulo, subtitulo, email, password, onClose }) {
-  const copiar = async (texto) => {
-    try { await navigator.clipboard.writeText(texto) } catch { /* ignore */ }
+  const [copiado, setCopiado] = useState(false)
+  const copiar = async () => {
+    try {
+      await navigator.clipboard.writeText(`Correo: ${email}\nContraseña temporal: ${password}`)
+      setCopiado(true)
+    } catch { /* el navegador no permitió copiar */ }
   }
 
   return (
-    <div className="modal-backdrop" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="modal-card">
-        <header className="modal-header">
-          <h3>{titulo}</h3>
-          <button className="modal-close" onClick={onClose}>×</button>
-        </header>
-        <div className="modal-body">
-          <p style={{ marginTop: 0, color: 'var(--cb-text-soft)' }}>{subtitulo}</p>
-
-          <div className="credentials-box">
-            <div className="cred-label">Correo institucional</div>
-            <div className="cred-value">{email}</div>
-            <div className="cred-label">Contraseña</div>
-            <div className="cred-value">{password}</div>
-          </div>
-
-          <div className="alert alert-info">
-            Comparte estas credenciales de forma segura con el usuario. Podrá cambiar su contraseña más adelante.
-          </div>
-        </div>
-        <div className="modal-footer">
-          <button className="btn btn-outline" onClick={() => copiar(`Correo: ${email}\nContraseña: ${password}`)}>
-            Copiar credenciales
+    <Modal titulo={titulo} onClose={onClose} size="sm"
+      footer={(
+        <>
+          <button className="btn btn-outline" onClick={copiar}>
+            <Icon name={copiado ? 'check' : 'copy'} /> {copiado ? 'Copiado' : 'Copiar credenciales'}
           </button>
           <button className="btn btn-primary" onClick={onClose}>Entendido</button>
-        </div>
+        </>
+      )}>
+      <p className="confirm-text">{subtitulo}</p>
+      <div className="credentials-box">
+        <div className="cred-label">Correo institucional</div>
+        <div className="cred-value">{email}</div>
+        <div className="cred-label">Contraseña temporal</div>
+        <div className="cred-value">{password}</div>
       </div>
-    </div>
+      <div className="alert alert-info">
+        Es una contraseña de un solo uso: en su primer ingreso el sistema le pedirá crear una contraseña personal.
+        Esta ventana es la única vez que se muestra.
+      </div>
+    </Modal>
   )
 }

@@ -48,3 +48,21 @@ sesión.
 `vercel.json` reenvía todas las rutas a `index.html`, por lo que las rutas
 SPA (`/admin/usuarios`, `/tienda`, etc.) funcionan incluso al recargar la
 página directamente.
+
+
+## Novedades v2.0
+
+- Menú lateral por permisos del rol activo (adaptado a celular).
+- Notificaciones y diálogos propios en lugar de `alert`/`confirm`/`prompt`.
+- Productos con SKU de 8 dígitos coloreado por bloques, filtros por familia,
+  subfamilia, marca y estado de stock, vista tabla/grilla y formulario con
+  vista previa del SKU. Página "Familias y SKU" que explica la codificación.
+- Almacén con entradas, salidas y ajustes por conteo con motivo; Kardex general
+  y por producto.
+- Nueva venta con búsqueda/escaneo por SKU (Enter agrega), filtros por familia,
+  control de cantidades, cálculo de vuelto y ticket imprimible de 80 mm.
+- Historial de ventas con filtros, paginación y anulación con motivo.
+- Reportes con rangos de fecha, gráficos y top de productos; panel
+  administrativo con indicadores del día e inventario por reponer.
+- Mi cuenta (datos de contacto y cambio de contraseña) y cambio obligatorio de
+  la contraseña temporal en el primer ingreso.

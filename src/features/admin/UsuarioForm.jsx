@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { usuariosApi } from '../../api/client'
+import Modal from '../../components/Modal'
 
 /** Modal para registrar/editar usuarios.
  * El correo NO se edita manualmente: se genera automáticamente al crear
- * a partir del primer nombre y los apellidos.
+ * a partir del primer nombre y los apellidos (el backend resuelve duplicados).
  */
 export default function UsuarioForm({ roles, usuario, onClose, onGuardado }) {
   const esNuevo = !usuario
@@ -15,9 +16,8 @@ export default function UsuarioForm({ roles, usuario, onClose, onGuardado }) {
     telefono: usuario?.telefono || '',
     direccion: usuario?.direccion || '',
     roles_ids: usuario?.roles?.map((r) => r.id) || [],
-    password: '',
-    estado: usuario?.estado || 'activo',
   })
+  const [emailPreview, setEmailPreview] = useState('')
   const [error, setError] = useState('')
   const [sending, setSending] = useState(false)
 
@@ -27,28 +27,32 @@ export default function UsuarioForm({ roles, usuario, onClose, onGuardado }) {
     roles_ids: f.roles_ids.includes(id) ? f.roles_ids.filter((x) => x !== id) : [...f.roles_ids, id],
   }))
 
-  // Vista previa del correo que se generará (frontend replica la regla)
-  const emailPreview = (() => {
-    const norm = (s) => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z]/g, '').toLowerCase()
-    const primerNombre = norm((form.nombres || '').split(/\s+/)[0])
-    const apPat = norm(form.apellido_paterno)
-    const primerAM = norm((form.apellido_materno || '').split(/\s+/)[0])
-    const local = `${primerNombre[0] || ''}${apPat}${primerAM[0] || ''}`
-    if (!local) return ''
-    return `${local}@coolbox.com.pe`
-  })()
+  // Vista previa real del correo (consulta duplicados en el servidor)
+  useEffect(() => {
+    if (!esNuevo) return
+    const { nombres, apellido_paterno, apellido_materno } = form
+    if (!nombres.trim() || !apellido_paterno.trim()) { setEmailPreview(''); return }
+    const t = setTimeout(() => {
+      usuariosApi.previewEmail({ nombres, apellido_paterno, apellido_materno })
+        .then((r) => setEmailPreview(r.email || ''))
+        .catch(() => setEmailPreview(''))
+    }, 350)
+    return () => clearTimeout(t)
+  }, [esNuevo, form.nombres, form.apellido_paterno, form.apellido_materno])
+
+  const dniValido = /^\d{8}$/.test(form.dni)
+  const telValido = !form.telefono || /^9\d{8}$/.test(form.telefono)
 
   async function guardar(e) {
     e.preventDefault()
     setError('')
+    if (esNuevo && !dniValido) { setError('El DNI debe tener exactamente 8 dígitos.'); return }
+    if (!telValido) { setError('El celular debe tener 9 dígitos y empezar con 9.'); return }
     if (form.roles_ids.length === 0) { setError('Debe asignar al menos un rol.'); return }
     setSending(true)
     try {
-      const payload = { ...form }
-      if (!payload.password) delete payload.password
-      const respuesta = esNuevo
-        ? await usuariosApi.crear(payload)
-        : await usuariosApi.editar(usuario.id, payload)
+      const { dni, ...resto } = form
+      const respuesta = esNuevo ? await usuariosApi.crear(form) : await usuariosApi.editar(usuario.id, resto)
       onGuardado(respuesta)
     } catch (err) {
       setError(err.detail || 'No fue posible guardar el usuario.')
@@ -58,141 +62,81 @@ export default function UsuarioForm({ roles, usuario, onClose, onGuardado }) {
   }
 
   return (
-    <div className="modal-backdrop" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="modal-card large">
-        <header className="modal-header">
-          <h3>{esNuevo ? 'Registrar nuevo usuario' : `Editar: ${usuario.nombre_completo}`}</h3>
-          <button className="modal-close" onClick={onClose}>×</button>
-        </header>
+    <Modal as="form" onSubmit={guardar} size="lg" onClose={onClose}
+      titulo={esNuevo ? 'Registrar nuevo usuario' : `Editar: ${usuario.nombre_completo}`}
+      subtitulo={esNuevo ? 'Toma los datos del colaborador; el correo y la contraseña temporal se generan al guardar.' : usuario.email}
+      footer={(
+        <>
+          <button type="button" className="btn btn-ghost" onClick={onClose}>Cancelar</button>
+          <button type="submit" className="btn btn-primary" disabled={sending}>
+            {sending ? <span className="spinner" /> : esNuevo ? 'Registrar usuario' : 'Guardar cambios'}
+          </button>
+        </>
+      )}>
+      {error && <div className="alert alert-error">{error}</div>}
 
-        <form onSubmit={guardar}>
-          <div className="modal-body">
-            {error && <div className="alert alert-error">{error}</div>}
-
-            <div className="form-row">
-              <div className="form-group">
-                <label>DNI</label>
-                <input
-                  className="form-control"
-                  value={form.dni}
-                  onChange={(e) => set('dni', e.target.value)}
-                  disabled={!esNuevo}
-                  required
-                  maxLength={15}
-                />
-              </div>
-              <div className="form-group">
-                <label>Teléfono</label>
-                <input
-                  className="form-control"
-                  value={form.telefono}
-                  onChange={(e) => set('telefono', e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="form-group">
-              <label>Nombres</label>
-              <input
-                className="form-control"
-                value={form.nombres}
-                onChange={(e) => set('nombres', e.target.value)}
-                placeholder="Ej: Juan Daniel"
-                required
-              />
-            </div>
-
-            <div className="form-row">
-              <div className="form-group">
-                <label>Apellido paterno</label>
-                <input
-                  className="form-control"
-                  value={form.apellido_paterno}
-                  onChange={(e) => set('apellido_paterno', e.target.value)}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Apellido materno</label>
-                <input
-                  className="form-control"
-                  value={form.apellido_materno}
-                  onChange={(e) => set('apellido_materno', e.target.value)}
-                  required
-                />
-              </div>
-            </div>
-
-            {esNuevo && (
-              <div className="alert alert-info">
-                <strong>Correo institucional:</strong>{' '}
-                <span style={{ fontFamily: 'monospace' }}>{emailPreview || '(se calcula al ingresar los apellidos)'}</span>
-                <div className="form-help" style={{ marginTop: 4 }}>
-                  Se genera automáticamente. Si ya existe se agregará un número (ej: <code>{emailPreview.replace('@', '1@')}</code>).
-                </div>
-              </div>
-            )}
-
-            <div className="form-group">
-              <label>Dirección</label>
-              <input
-                className="form-control"
-                value={form.direccion}
-                onChange={(e) => set('direccion', e.target.value)}
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Roles asignados</label>
-              <div className="checkbox-list">
-                {roles.map((r) => (
-                  <label key={r.id} className="checkbox-item">
-                    <input
-                      type="checkbox"
-                      checked={form.roles_ids.includes(r.id)}
-                      onChange={() => toggleRol(r.id)}
-                    />
-                    <span>
-                      <strong>{r.nombre}</strong>
-                      {r.es_admin && <span className="badge badge-red" style={{ marginLeft: 6 }}>Admin</span>}
-                    </span>
-                  </label>
-                ))}
-              </div>
-              <div className="form-help">Un usuario puede tener varios roles. Al iniciar sesión elegirá uno.</div>
-            </div>
-
-            <div className="form-row">
-              {!esNuevo && (
-                <div className="form-group">
-                  <label>Estado</label>
-                  <select className="form-control" value={form.estado} onChange={(e) => set('estado', e.target.value)}>
-                    <option value="activo">Activo</option>
-                    <option value="inactivo">Inactivo</option>
-                  </select>
-                </div>
-              )}
-              <div className="form-group">
-                <label>{esNuevo ? 'Contraseña (opcional)' : 'Nueva contraseña (opcional)'}</label>
-                <input
-                  className="form-control"
-                  value={form.password}
-                  onChange={(e) => set('password', e.target.value)}
-                  placeholder={esNuevo ? 'Si lo dejas vacío se genera una temporal' : 'Dejar en blanco para no cambiar'}
-                  type="text"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="modal-footer">
-            <button type="button" className="btn btn-ghost" onClick={onClose}>Cancelar</button>
-            <button type="submit" className="btn btn-primary" disabled={sending}>
-              {sending ? <span className="spinner" /> : esNuevo ? 'Registrar usuario' : 'Guardar cambios'}
-            </button>
-          </div>
-        </form>
+      <div className="form-row">
+        <div className="form-group">
+          <label>DNI</label>
+          <input className="form-control" value={form.dni} inputMode="numeric" maxLength={8} required disabled={!esNuevo}
+            onChange={(e) => set('dni', e.target.value.replace(/\D/g, ''))} placeholder="8 dígitos" />
+          {esNuevo && form.dni && !dniValido && <div className="form-error">Debe tener 8 dígitos.</div>}
+        </div>
+        <div className="form-group">
+          <label>Celular</label>
+          <input className="form-control" value={form.telefono} inputMode="numeric" maxLength={9} placeholder="9XXXXXXXX"
+            onChange={(e) => set('telefono', e.target.value.replace(/\D/g, ''))} />
+          {!telValido && <div className="form-error">9 dígitos, empieza con 9.</div>}
+        </div>
       </div>
-    </div>
+
+      <div className="form-group">
+        <label>Nombres</label>
+        <input className="form-control" value={form.nombres} onChange={(e) => set('nombres', e.target.value)}
+          placeholder="Ej: Juan Daniel" required maxLength={120} />
+      </div>
+
+      <div className="form-row">
+        <div className="form-group">
+          <label>Apellido paterno</label>
+          <input className="form-control" value={form.apellido_paterno} required maxLength={80}
+            onChange={(e) => set('apellido_paterno', e.target.value)} />
+        </div>
+        <div className="form-group">
+          <label>Apellido materno</label>
+          <input className="form-control" value={form.apellido_materno} required maxLength={80}
+            onChange={(e) => set('apellido_materno', e.target.value)} />
+        </div>
+      </div>
+
+      {esNuevo && (
+        <div className="alert alert-info">
+          <strong>Correo institucional:</strong>{' '}
+          <span className="mono">{emailPreview || '(se calcula al ingresar nombres y apellidos)'}</span>
+          <div className="form-help">Inicial del primer nombre + apellido paterno + inicial del materno. Si ya existe, se agrega un número.</div>
+        </div>
+      )}
+
+      <div className="form-group">
+        <label>Dirección</label>
+        <input className="form-control" value={form.direccion} maxLength={200} onChange={(e) => set('direccion', e.target.value)} />
+      </div>
+
+      <div className="form-group">
+        <label>Roles asignados</label>
+        <div className="role-check-grid">
+          {roles.map((r) => (
+            <label key={r.id} className={`role-check ${form.roles_ids.includes(r.id) ? 'checked' : ''}`}>
+              <input type="checkbox" checked={form.roles_ids.includes(r.id)} onChange={() => toggleRol(r.id)} />
+              <span>
+                <strong>{r.nombre}</strong>
+                <small>{r.descripcion}</small>
+              </span>
+            </label>
+          ))}
+        </div>
+        <div className="form-help">Un usuario puede tener varios roles. Al iniciar sesión elegirá con cuál trabajar.</div>
+      </div>
+    </Modal>
   )
 }

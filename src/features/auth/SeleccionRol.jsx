@@ -1,5 +1,8 @@
 import { useState } from 'react'
 import { authApi } from '../../api/client'
+import Icon from '../../components/Icon'
+
+const ICONO_ROL = { administrador: 'dashboard', vendedor: 'cart', almacenero: 'warehouse', supervisor: 'chart' }
 
 /** Al iniciar sesión (o al pulsar "Cambiar rol") el usuario con más de un rol
  * elige con cuál operará. El rol Administrador también se elige aquí. El
@@ -16,8 +19,7 @@ export default function SeleccionRol({ usuario, onSuccess, onLogout }) {
     setSending(true)
     setError('')
     try {
-      const data = await authApi.seleccionarRol(rolId)
-      onSuccess(data)
+      onSuccess(await authApi.seleccionarRol(rolId))
     } catch (err) {
       setError(err.detail || 'No fue posible activar el rol seleccionado.')
     } finally {
@@ -31,19 +33,16 @@ export default function SeleccionRol({ usuario, onSuccess, onLogout }) {
         <h2>Selecciona tu rol</h2>
         <p className="subtitle">
           Hola <strong>{usuario.nombres} {usuario.apellido_paterno}</strong>. Elige el rol con el que vas a trabajar en esta sesión.
-          Podrás cambiarlo más tarde desde la barra superior.
+          Podrás cambiarlo más tarde desde el menú lateral.
         </p>
 
         {error && <div className="alert alert-error">{error}</div>}
 
         <div className="role-grid">
           {roles.map((rol) => (
-            <button
-              key={rol.id}
-              type="button"
-              className={`role-option ${rolId === rol.id ? 'selected' : ''}`}
-              onClick={() => setRolId(rol.id)}
-            >
+            <button key={rol.id} type="button" className={`role-option ${rolId === rol.id ? 'selected' : ''}`}
+              onClick={() => setRolId(rol.id)} onDoubleClick={confirmar}>
+              <span className="role-icon"><Icon name={ICONO_ROL[rol.codigo] || 'user'} size={22} /></span>
               {rol.es_admin && <span className="role-tag">Panel administrativo</span>}
               <span className="role-name">{rol.nombre}</span>
               <span className="role-desc">{rol.descripcion}</span>
@@ -55,9 +54,7 @@ export default function SeleccionRol({ usuario, onSuccess, onLogout }) {
         </div>
 
         <div className="role-actions">
-          <button type="button" className="btn btn-ghost" onClick={onLogout}>
-            Cerrar sesión
-          </button>
+          <button type="button" className="btn btn-ghost" onClick={onLogout}>Cerrar sesión</button>
           <button type="button" className="btn btn-primary btn-lg" disabled={!rolId || sending} onClick={confirmar}>
             {sending ? <span className="spinner" /> : 'Activar rol y continuar'}
           </button>

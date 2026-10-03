@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 
-/* Ilustraciones de línea por categoría: se muestran cuando el producto aún no
+/* Ilustraciones de línea por familia: se muestran cuando el producto aún no
  * tiene foto o si la imagen no carga. */
 const ICONOS = {
   Laptops: (
@@ -13,6 +13,12 @@ const ICONOS = {
     <>
       <rect x="21" y="8" width="22" height="48" rx="4" />
       <path d="M29 13h6" />
+      <circle cx="32" cy="50" r="1.5" />
+    </>
+  ),
+  Tablets: (
+    <>
+      <rect x="14" y="8" width="36" height="48" rx="4" />
       <circle cx="32" cy="50" r="1.5" />
     </>
   ),
@@ -29,14 +35,20 @@ const ICONOS = {
       <path d="M24 50h16M32 42v8" />
     </>
   ),
-  Accesorios: (
+  'Smartwatch y Wearables': (
+    <>
+      <rect x="20" y="18" width="24" height="28" rx="6" />
+      <path d="M24 18l2-10h12l2 10M24 46l2 10h12l2-10" />
+    </>
+  ),
+  'Accesorios de Cómputo': (
     <>
       <rect x="22" y="10" width="20" height="36" rx="10" />
       <path d="M32 10v12" />
       <path d="M32 46v8" />
     </>
   ),
-  Gaming: (
+  Gamer: (
     <>
       <path d="M18 22h28a10 10 0 0 1 9.7 12.4l-2.4 9.6a5 5 0 0 1-8.6 2L40 40H24l-4.7 6a5 5 0 0 1-8.6-2l-2.4-9.6A10 10 0 0 1 18 22z" />
       <path d="M20 31v6M17 34h6" />
@@ -45,6 +57,8 @@ const ICONOS = {
     </>
   ),
 }
+ICONOS.Accesorios = ICONOS['Accesorios de Cómputo']
+ICONOS.Gaming = ICONOS.Gamer
 
 const ICONO_GENERICO = (
   <>
@@ -56,6 +70,7 @@ const ICONO_GENERICO = (
 export default function ProductoImagen({ producto, size = 'md' }) {
   const [fallo, setFallo] = useState(false)
   const url = producto?.imagen_url || producto?.producto_imagen_url
+  const familia = producto?.familia || producto?.categoria
 
   // Si cambia la imagen (p. ej. en el formulario), volver a intentar cargarla
   useEffect(() => { setFallo(false) }, [url])
@@ -64,16 +79,16 @@ export default function ProductoImagen({ producto, size = 'md' }) {
   if (url && !fallo) {
     return (
       <div className={clase}>
-        <img src={url} alt={producto?.nombre || 'Producto'} loading="lazy" onError={() => setFallo(true)} />
+        <img src={url} alt={producto?.nombre || 'Producto'} loading="lazy" referrerPolicy="no-referrer" onError={() => setFallo(true)} />
       </div>
     )
   }
   return (
     <div className={`${clase} prod-img-placeholder`} aria-label="Producto sin foto">
       <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-        {ICONOS[producto?.categoria] || ICONO_GENERICO}
+        {ICONOS[familia] || ICONO_GENERICO}
       </svg>
-      {size !== 'xs' && producto?.marca && <span className="prod-img-brand">{producto.marca}</span>}
+      {size !== 'xs' && size !== 'sm' && producto?.marca && <span className="prod-img-brand">{producto.marca}</span>}
     </div>
   )
 }

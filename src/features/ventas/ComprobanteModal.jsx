@@ -1,63 +1,70 @@
-import ProductoImagen from '../../components/ProductoImagen'
+import Icon from '../../components/Icon'
+import Modal from '../../components/Modal'
+import { fechaHora, METODOS_PAGO, money } from '../../utils/format'
 
-export default function ComprobanteModal({ venta, onClose }) {
-  const imprimir = () => window.print()
+/** Comprobante interno de venta, con formato de ticket de 80 mm al imprimir. */
+export default function ComprobanteModal({ venta, onClose, recienCreada = false, onAnular }) {
+  const anulada = venta.estado === 'anulada'
   return (
-    <div className="modal-backdrop" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="modal-card large">
-        <header className="modal-header">
-          <h3>Venta registrada: {venta.codigo}</h3>
-          <button className="modal-close" onClick={onClose}>×</button>
-        </header>
-        <div className="modal-body">
-          <div className="alert alert-success">Venta registrada correctamente. Stock actualizado.</div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-            <div><strong>Atendido por:</strong><br/>{venta.usuario_nombre}</div>
-            <div><strong>Rol:</strong><br/>{venta.rol}</div>
-            <div><strong>Cliente:</strong><br/>{venta.cliente_nombre || '—'}</div>
-            <div><strong>Método de pago:</strong><br/>{venta.metodo_pago}</div>
-            <div><strong>Fecha:</strong><br/>{new Date(venta.fecha).toLocaleString('es-PE')}</div>
-          </div>
-
-          <div className="table-wrapper">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th style={{ width: 56 }}></th>
-                  <th>Código</th>
-                  <th>Producto</th>
-                  <th>Cantidad</th>
-                  <th>Precio</th>
-                  <th>Subtotal</th>
-                </tr>
-              </thead>
-              <tbody>
-                {venta.detalles.map((d) => (
-                  <tr key={d.id}>
-                    <td><ProductoImagen producto={{ imagen_url: d.producto_imagen_url, nombre: d.producto_nombre }} size="xs" /></td>
-                    <td style={{ fontFamily: 'monospace' }}>{d.producto_codigo}</td>
-                    <td>{d.producto_nombre}</td>
-                    <td>{d.cantidad}</td>
-                    <td>S/ {d.precio_unitario.toFixed(2)}</td>
-                    <td><strong>S/ {d.subtotal.toFixed(2)}</strong></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="cart-totals" style={{ marginTop: '1rem' }}>
-            <div className="cart-total-row"><span>Subtotal</span><span>S/ {venta.subtotal.toFixed(2)}</span></div>
-            <div className="cart-total-row"><span>IGV</span><span>S/ {venta.igv.toFixed(2)}</span></div>
-            <div className="cart-total-row grand"><span>Total</span><span>S/ {venta.total.toFixed(2)}</span></div>
-          </div>
+    <Modal size="md" onClose={onClose}
+      titulo={`Venta ${venta.codigo}`}
+      subtitulo={anulada ? 'Venta anulada' : recienCreada ? 'Venta registrada y stock actualizado' : fechaHora(venta.fecha)}
+      footer={(
+        <>
+          {onAnular && !anulada && <button className="btn btn-danger" onClick={onAnular}><Icon name="ban" /> Anular venta</button>}
+          <button className="btn btn-outline" onClick={() => window.print()}><Icon name="printer" /> Imprimir ticket</button>
+          <button className="btn btn-primary" onClick={onClose}>{recienCreada ? 'Nueva venta' : 'Cerrar'}</button>
+        </>
+      )}>
+      {recienCreada && <div className="alert alert-success no-print">Venta registrada correctamente.</div>}
+      {anulada && (
+        <div className="alert alert-error">
+          <strong>Anulada</strong> el {fechaHora(venta.fecha_anulacion)} por {venta.anulada_por || '—'}.<br />
+          Motivo: {venta.motivo_anulacion || '—'}
         </div>
-        <div className="modal-footer">
-          <button className="btn btn-outline" onClick={imprimir}>Imprimir comprobante</button>
-          <button className="btn btn-primary" onClick={onClose}>Cerrar</button>
+      )}
+
+      <div className="ticket" id="ticket-imprimible">
+        <div className="ticket-head">
+          <div className="ticket-brand">COOLBOX</div>
+          <div>Comprobante interno de venta</div>
+          <div className="ticket-code">{venta.codigo}</div>
+          <div>{fechaHora(venta.fecha)}</div>
         </div>
+        <div className="ticket-meta">
+          <div><span>Atendido por</span><span>{venta.usuario_nombre}</span></div>
+          <div><span>Cliente</span><span>{venta.cliente_nombre || 'Público general'}</span></div>
+          <div><span>Pago</span><span>{METODOS_PAGO[venta.metodo_pago] || venta.metodo_pago}</span></div>
+        </div>
+        <table className="ticket-items">
+          <thead><tr><th>Cant.</th><th>Descripción</th><th className="num">Importe</th></tr></thead>
+          <tbody>
+            {venta.detalles.map((d) => (
+              <tr key={d.id}>
+                <td>{d.cantidad}</td>
+                <td>
+                  {d.producto_nombre}
+                  <div className="ticket-sub">SKU {d.producto_sku || d.producto_codigo} · {money(d.precio_unitario)} c/u</div>
+                </td>
+                <td className="num">{money(d.subtotal)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <div className="ticket-totals">
+          <div><span>Op. gravada</span><span>{money(venta.subtotal)}</span></div>
+          <div><span>IGV 18%</span><span>{money(venta.igv)}</span></div>
+          <div className="grand"><span>TOTAL</span><span>{money(venta.total)}</span></div>
+          {venta.monto_recibido != null && (
+            <>
+              <div><span>Recibido</span><span>{money(venta.monto_recibido)}</span></div>
+              <div><span>Vuelto</span><span>{money(venta.vuelto)}</span></div>
+            </>
+          )}
+        </div>
+        {anulada && <div className="ticket-void">ANULADA</div>}
+        <div className="ticket-foot">Gracias por su compra · Garantía según política de Coolbox</div>
       </div>
-    </div>
+    </Modal>
   )
 }
