@@ -361,3 +361,11 @@ a.btn, .btn { text-decoration: none; }
 .data-table td.truncate { max-width: 260px; }
 .sku-block.sku-p3 { color: var(--cb-black); }
 .kardex-motivo { min-width: 200px; }
+
+/* SKU en texto simple (sin bloques de color) */
+.sku-text { font-family: ui-monospace, Consolas, monospace; color: var(--cb-text-soft); white-space: nowrap; align-self: flex-start; }
+.sku-text strong { color: var(--cb-black); font-weight: 700; }
+.sku-text.sku-sm { font-size: 0.74rem; }
+.sku-text.sku-md { font-size: 0.82rem; }
+.sku-text.sku-lg { font-size: 1.05rem; }
+.sku-part.solo { background: none !important; color: var(--cb-black) !important; padding: 0; font-weight: 700; }

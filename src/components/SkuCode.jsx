@@ -1,20 +1,12 @@
-/** Muestra el SKU separado en sus 4 bloques (familia · subfamilia · marca · correlativo). */
+/** Muestra el SKU como texto simple: "SKU: 10020401". */
 export default function SkuCode({ sku, producto, size = 'md' }) {
-  if (!sku) return <span className="sku sku-empty">Sin SKU</span>
-  const partes = [sku.slice(0, 2), sku.slice(2, 4), sku.slice(4, 6), sku.slice(6, 8)]
-  const titulos = producto
-    ? [
-        `Familia ${partes[0]}: ${producto.familia || ''}`,
-        `Subfamilia ${partes[1]}: ${producto.subfamilia || ''}`,
-        `Marca ${partes[2]}: ${producto.marca || ''}`,
-        `Correlativo ${partes[3]}`,
-      ]
-    : ['Familia', 'Subfamilia', 'Marca', 'Correlativo']
+  if (!sku) return <span className="sku-text sku-empty">Sin SKU</span>
+  const titulo = producto
+    ? `Familia ${sku.slice(0, 2)} ${producto.familia || ''} · Subfamilia ${sku.slice(2, 4)} ${producto.subfamilia || ''} · Marca ${sku.slice(4, 6)} ${producto.marca || ''} · Correlativo ${sku.slice(6, 8)}`
+    : undefined
   return (
-    <span className={`sku sku-${size}`} aria-label={`SKU ${sku}`}>
-      {partes.map((p, i) => (
-        <span key={i} className={`sku-part sku-p${i}`} title={titulos[i]}>{p}</span>
-      ))}
+    <span className={`sku-text sku-${size}`} title={titulo}>
+      SKU: <strong>{sku}</strong>
     </span>
   )
 }
