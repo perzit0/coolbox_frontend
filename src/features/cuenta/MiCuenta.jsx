@@ -74,7 +74,6 @@ export default function MiCuenta({ sesion, onUsuario }) {
                   onChange={(e) => setPerfil({ ...perfil, direccion: e.target.value })} />
               </div>
             </div>
-            <p className="form-help">El nombre, DNI y correo solo los modifica el administrador.</p>
             <button type="submit" className="btn btn-outline" disabled={guardandoPerfil}>
               {guardandoPerfil ? <span className="spinner spinner-dark" /> : 'Guardar datos de contacto'}
             </button>

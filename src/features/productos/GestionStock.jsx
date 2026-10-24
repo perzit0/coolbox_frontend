@@ -6,11 +6,10 @@ import ProductoImagen from '../../components/ProductoImagen'
 import SkuCode from '../../components/SkuCode'
 import { ESTADO_STOCK } from '../../utils/format'
 import FiltrosProductos, { FILTROS_INICIALES } from './FiltrosProductos'
-import KardexModal from './KardexModal'
 import MovimientoModal from './MovimientoModal'
 import useCatalogo from './useCatalogo'
 
-/** Vista de almacén (Administrador): entradas, salidas y ajustes con motivo (todo queda en el kardex). */
+/** Vista de almacén (Administrador): entradas, salidas y ajustes con motivo. */
 export default function GestionStock() {
   const fb = useFeedback()
   const { familias, marcas } = useCatalogo()
@@ -18,7 +17,6 @@ export default function GestionStock() {
   const [productos, setProductos] = useState([])
   const [loading, setLoading] = useState(true)
   const [movimiento, setMovimiento] = useState(null) // { producto, tipo }
-  const [kardex, setKardex] = useState(null)
 
   const cargar = async () => {
     setLoading(true)
@@ -48,7 +46,7 @@ export default function GestionStock() {
       <div className="page-header">
         <div>
           <h1 className="page-title">Control de almacén</h1>
-          <p className="page-subtitle">Registra entradas, salidas y ajustes de inventario. Cada movimiento queda en el kardex con su motivo.</p>
+          <p className="page-subtitle">Entradas, salidas y ajustes de inventario.</p>
         </div>
       </div>
 
@@ -101,9 +99,6 @@ export default function GestionStock() {
                         <button className="btn btn-outline btn-sm" onClick={() => setMovimiento({ producto: p, tipo: 'ajuste' })} title="Ajuste por conteo">
                           <Icon name="scale" size={15} />
                         </button>
-                        <button className="btn btn-outline btn-sm" onClick={() => setKardex(p)} title="Ver kardex">
-                          <Icon name="kardex" size={15} />
-                        </button>
                       </div>
                     </td>
                   </tr>
@@ -116,7 +111,6 @@ export default function GestionStock() {
         <MovimientoModal producto={movimiento.producto} tipoInicial={movimiento.tipo}
           onClose={() => setMovimiento(null)} onGuardado={onGuardado} />
       )}
-      {kardex && <KardexModal producto={kardex} onClose={() => setKardex(null)} />}
     </>
   )
 }

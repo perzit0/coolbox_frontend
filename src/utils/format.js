@@ -24,7 +24,6 @@ export const METODOS_PAGO = {
   tarjeta: 'Tarjeta',
   yape: 'Yape',
   plin: 'Plin',
-  transferencia: 'Transferencia',
 }
 
 export const TIPOS_MOVIMIENTO = {

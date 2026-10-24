@@ -14,7 +14,6 @@ export const MENU = [
   { seccion: 'Catálogo e inventario' },
   { to: '/productos', label: 'Productos', icon: 'box', perm: 'productos.ver' },
   { to: '/almacen', label: 'Almacén', icon: 'warehouse', perm: 'stock.actualizar' },
-  { to: '/kardex', label: 'Kardex', icon: 'kardex', perm: 'kardex.ver' },
   { to: '/catalogo/sku', label: 'Familias y SKU', icon: 'tag', perm: 'productos.ver' },
   { seccion: 'Administración', soloAdmin: true },
   { to: '/admin/usuarios', label: 'Usuarios', icon: 'users', perm: 'usuarios.ver' },

@@ -78,7 +78,6 @@ export default function MovimientoModal({ producto, tipoInicial = 'entrada', onC
           </button>
         ))}
       </div>
-      <p className="form-help" style={{ marginTop: 0 }}>{def.ayuda}</p>
 
       <div className="form-row">
         <div className="form-group">

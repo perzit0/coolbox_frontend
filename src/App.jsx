@@ -13,7 +13,6 @@ import GestionUsuarios from './features/admin/GestionUsuarios'
 import Reportes from './features/admin/Reportes'
 import Productos from './features/productos/Productos'
 import GestionStock from './features/productos/GestionStock'
-import Kardex from './features/productos/Kardex'
 import GuiaSku from './features/productos/GuiaSku'
 import NuevaVenta from './features/ventas/NuevaVenta'
 import HistorialVentas from './features/ventas/HistorialVentas'
@@ -146,7 +145,6 @@ export default function App() {
         {puede('productos.ver') && <Route path="/productos" element={<Productos permisos={permisos} />} />}
         {puede('productos.ver') && <Route path="/catalogo/sku" element={<GuiaSku />} />}
         {puede('stock.actualizar') && <Route path="/almacen" element={<GestionStock />} />}
-        {puede('kardex.ver') && <Route path="/kardex" element={<Kardex />} />}
         <Route path="/mi-cuenta" element={<MiCuenta sesion={sesion} onUsuario={actualizarUsuario} />} />
         <Route path="*" element={<Navigate to={inicioDeRol(rol)} replace />} />
       </Routes>

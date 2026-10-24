@@ -40,12 +40,6 @@ export default function DashboardAdmin({ sesion }) {
         </div>
       </div>
 
-      {(hoy.indicadores.cajas_abiertas > 0 || hoy.indicadores.cajas_con_diferencia > 0) && (
-        <div className="alert alert-info">
-          Hoy: {plural(hoy.indicadores.cajas_abiertas, 'caja abierta', 'cajas abiertas')} · {plural(hoy.indicadores.cajas_con_diferencia, 'caja cerrada con diferencia', 'cajas cerradas con diferencia')}.{' '}
-          <Link to="/cajas" className="link">Ver control de cajas</Link>
-        </div>
-      )}
 
       <div className="stats-grid">
         <div className="stat-card">
@@ -103,7 +97,7 @@ export default function DashboardAdmin({ sesion }) {
         <div className="card">
           <div className="card-header">
             <h3 className="card-title">Productos por reponer</h3>
-            <Link to="/kardex" className="link">Ir al kardex</Link>
+            <Link to="/almacen" className="link">Ir a almacén</Link>
           </div>
           {inv.criticos.length === 0 ? <div className="empty-state">Todo el inventario está sobre el stock mínimo.</div> : (
             <table className="data-table compact">
@@ -134,7 +128,7 @@ export default function DashboardAdmin({ sesion }) {
                   <tr key={v.id} className={v.estado === 'anulada' ? 'row-muted' : ''}>
                     <td className="mono"><strong>{v.codigo}</strong></td>
                     <td>{fechaHora(v.fecha)}</td>
-                    <td>{METODOS_PAGO[v.metodo_pago]}</td>
+                    <td>{METODOS_PAGO[v.metodo_pago] || v.metodo_pago}</td>
                     <td className="num">{v.estado === 'anulada' ? <span className="badge badge-red">Anulada</span> : money(v.total)}</td>
                   </tr>
                 ))}

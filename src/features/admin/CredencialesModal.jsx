@@ -28,10 +28,6 @@ export default function CredencialesModal({ titulo, subtitulo, email, password, 
         <div className="cred-label">Contraseña temporal</div>
         <div className="cred-value">{password}</div>
       </div>
-      <div className="alert alert-info">
-        Es una contraseña de un solo uso: en su primer ingreso el sistema le pedirá crear una contraseña personal.
-        Esta ventana es la única vez que se muestra.
-      </div>
     </Modal>
   )
 }

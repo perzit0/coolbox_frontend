@@ -86,7 +86,6 @@ export default function MiCaja() {
                   <button key={m} type="button" className={`chip ${Number(fondo) === m ? 'active' : ''}`} onClick={() => setFondo(String(m))}>{money(m)}</button>
                 ))}
               </div>
-              <p className="form-help">Cuenta los billetes y monedas que recibes para dar vuelto. Este monto se usará en el arqueo al cerrar.</p>
             </div>
             {error && <div className="alert alert-error">{error}</div>}
             <button className="btn btn-primary btn-lg" disabled={enviando}>

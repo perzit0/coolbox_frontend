@@ -220,19 +220,16 @@ export default function ProductoForm({ producto, familias, marcas: marcasInicial
           <div className="form-group">
             <label>Stock inicial</label>
             <input className="form-control" type="number" min="0" value={form.stock} onChange={(e) => set('stock', e.target.value)} />
-            <div className="form-help">Se registra en el kardex como "Stock inicial".</div>
           </div>
         ) : (
           <div className="form-group">
             <label>Stock actual</label>
             <input className="form-control" value={producto.stock} disabled />
-            <div className="form-help">Se modifica desde Almacén (entradas, salidas y ajustes).</div>
           </div>
         )}
         <div className="form-group">
           <label>Stock mínimo</label>
           <input className="form-control" type="number" min="0" value={form.stock_minimo} onChange={(e) => set('stock_minimo', e.target.value)} />
-          <div className="form-help">Por debajo de este valor se marca para reponer.</div>
         </div>
       </div>
 
@@ -252,7 +249,6 @@ export default function ProductoForm({ producto, familias, marcas: marcasInicial
               Quitar imagen
             </button>
           )}
-          <p className="image-field-hint">JPG o PNG. La foto se ajusta automáticamente a 600 px para que cargue rápido.</p>
         </div>
       </div>
 

@@ -49,7 +49,7 @@ export default function Login({ onSuccess }) {
         <div className="hero-features">
           <div className="hero-feature">Un solo acceso para todo el personal</div>
           <div className="hero-feature">Cada rol habilita solo sus propias opciones</div>
-          <div className="hero-feature">Ventas, catálogo con SKU, kardex y reportes en un solo lugar</div>
+          <div className="hero-feature">Ventas, catálogo con SKU, caja y reportes en un solo lugar</div>
         </div>
       </aside>
 

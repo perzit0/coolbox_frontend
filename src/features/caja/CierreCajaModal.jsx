@@ -53,7 +53,7 @@ export default function CierreCajaModal({ caja, onClose, onCerrada }) {
   return (
     <Modal size="lg" as="form" onSubmit={confirmar} onClose={onClose}
       titulo={`Cierre de caja ${caja.codigo}`}
-      subtitulo="Cuenta el efectivo de tu gaveta por denominación. Los pagos con tarjeta, Yape, Plin o transferencia no se cuentan."
+      subtitulo="Cuenta el efectivo de tu gaveta por denominación. Los pagos con tarjeta, Yape o Plin no se cuentan."
       footer={(
         <>
           <button type="button" className="btn btn-outline" onClick={onClose}>Cancelar</button>

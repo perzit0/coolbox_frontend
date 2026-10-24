@@ -110,10 +110,9 @@ export default function UsuarioForm({ roles, usuario, onClose, onGuardado }) {
       </div>
 
       {esNuevo && (
-        <div className="alert alert-info">
-          <strong>Correo institucional:</strong>{' '}
-          <span className="mono">{emailPreview || '(se calcula al ingresar nombres y apellidos)'}</span>
-          <div className="form-help">Inicial del primer nombre + apellido paterno + inicial del materno. Si ya existe, se agrega un número.</div>
+        <div className="form-group">
+          <label>Correo institucional</label>
+          <input className="form-control mono" value={emailPreview} disabled />
         </div>
       )}
 
@@ -135,7 +134,6 @@ export default function UsuarioForm({ roles, usuario, onClose, onGuardado }) {
             </label>
           ))}
         </div>
-        <div className="form-help">Un usuario puede tener varios roles. Al iniciar sesión elegirá con cuál trabajar.</div>
       </div>
     </Modal>
   )
