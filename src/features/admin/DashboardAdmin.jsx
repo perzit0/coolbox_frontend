@@ -40,6 +40,13 @@ export default function DashboardAdmin({ sesion }) {
         </div>
       </div>
 
+      {(hoy.indicadores.cajas_abiertas > 0 || hoy.indicadores.cajas_con_diferencia > 0) && (
+        <div className="alert alert-info">
+          Hoy: {plural(hoy.indicadores.cajas_abiertas, 'caja abierta', 'cajas abiertas')} · {plural(hoy.indicadores.cajas_con_diferencia, 'caja cerrada con diferencia', 'cajas cerradas con diferencia')}.{' '}
+          <Link to="/cajas" className="link">Ver control de cajas</Link>
+        </div>
+      )}
+
       <div className="stats-grid">
         <div className="stat-card">
           <p className="stat-label">Ventas de hoy</p>

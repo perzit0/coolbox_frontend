@@ -116,9 +116,9 @@ export default function HistorialVentas({ puedeAnular = false }) {
               <tr><td colSpan="9" className="empty-state">{hayFiltros ? 'Ninguna venta coincide con los filtros.' : 'Aún no hay ventas registradas.'}</td></tr>
             ) : data.ventas.map((v) => (
               <tr key={v.id} className={v.estado === 'anulada' ? 'row-muted' : ''}>
-                <td className="mono"><strong>{v.codigo}</strong></td>
+                <td className="mono nowrap"><strong>{v.codigo}</strong></td>
                 <td className="nowrap">{fechaHora(v.fecha)}</td>
-                <td>{v.usuario_nombre}<div className="cell-sub">{v.rol}{v.caja_codigo ? ` · Caja ${v.caja_codigo}` : ''}</div></td>
+                <td>{v.usuario_nombre}<div className="cell-sub">{v.rol}{v.caja_codigo ? <span className="nowrap"> · Caja {v.caja_codigo}</span> : ''}</div></td>
                 <td>{v.cliente_nombre || '—'}</td>
                 <td>{METODOS_PAGO[v.metodo_pago] || v.metodo_pago}</td>
                 <td className="num">{v.cantidad_items}</td>

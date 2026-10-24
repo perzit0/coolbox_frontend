@@ -31,7 +31,7 @@ export default function MiCaja() {
   const historialCard = historial.length > 0 && (
     <div className="card">
       <div className="card-header"><h3 className="card-title">Mis últimos cierres</h3></div>
-      <table className="data-table">
+      <div className="table-wrapper flat"><table className="data-table">
         <thead><tr><th>Caja</th><th>Apertura</th><th>Cierre</th><th className="num">Vendido</th><th className="num">Diferencia</th><th /></tr></thead>
         <tbody>
           {historial.map((c) => (
@@ -45,7 +45,7 @@ export default function MiCaja() {
             </tr>
           ))}
         </tbody>
-      </table>
+      </table></div>
     </div>
   )
   const reporteModal = reporte && <ReporteCierreModal caja={reporte.caja} recienCerrada={reporte.recien} onClose={() => setReporte(null)} />

@@ -101,6 +101,30 @@ export default function Reportes() {
           </div>
 
           <div className="card">
+            <div className="card-header">
+              <h3 className="card-title">Cuadre de cajas por vendedor</h3>
+              <span className="cell-sub">{rep.indicadores.cajas} caja(s) · {rep.indicadores.cajas_con_diferencia} con diferencia</span>
+            </div>
+            {(rep.cuadre_cajas || []).length === 0 ? <div className="empty-state">No se abrieron cajas en el rango.</div> : (
+              <table className="data-table compact">
+                <thead><tr><th>Vendedor</th><th className="num">Cajas</th><th className="num">Cuadradas</th><th className="num">Abiertas</th><th className="num">Sobrante</th><th className="num">Faltante</th></tr></thead>
+                <tbody>
+                  {rep.cuadre_cajas.map((c) => (
+                    <tr key={c.usuario_id}>
+                      <td>{c.nombre}</td>
+                      <td className="num">{c.cajas}</td>
+                      <td className="num">{c.cuadradas}</td>
+                      <td className="num">{c.abiertas}</td>
+                      <td className="num">{c.sobrante ? money(c.sobrante) : '—'}</td>
+                      <td className="num">{c.faltante ? <strong className="text-red">{money(c.faltante)}</strong> : '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+
+          <div className="card">
             <div className="card-header"><h3 className="card-title">Top 10 productos más vendidos</h3></div>
             {rep.top_productos.length === 0 ? <div className="empty-state">Sin ventas en el rango.</div> : (
               <table className="data-table compact">

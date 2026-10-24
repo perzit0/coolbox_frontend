@@ -66,3 +66,12 @@ página directamente.
   administrativo con indicadores del día e inventario por reponer.
 - Mi cuenta (datos de contacto y cambio de contraseña) y cambio obligatorio de
   la contraseña temporal en el primer ingreso.
+
+## Novedades v3.0 — Módulo de Ventas y Caja
+
+- **Mi caja** (`/caja`, Vendedor): apertura con fondo inicial, resumen del turno en vivo, cierre con arqueo por billetes y monedas, reporte de cierre imprimible (80 mm) e historial de cierres.
+- **Nueva venta** queda bloqueada si la caja está cerrada o es de un día anterior; muestra la caja activa y lo vendido.
+- **Control de cajas** (`/cajas`, Supervisor y Administrador): turnos abiertos y cerrados, sobrantes, faltantes y detalle de ventas por caja.
+- **Historial de ventas**: muestra la caja de cada venta y oculta "Anular" cuando la caja ya se cerró.
+- **Reportes**: cuadre de cajas por vendedor. El panel del Administrador avisa si hay cajas abiertas o con diferencia.
+- Se retiró el rol Almacenero y "Cambiar rol" pide un token nuevo sin rol activo.

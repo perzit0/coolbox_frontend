@@ -70,29 +70,30 @@ export default function ControlCajas() {
         </div>
       )}
 
-      <div className="card">
+      <div className="table-wrapper">
         <table className="data-table">
           <thead>
             <tr>
-              <th>Caja</th><th>Vendedor</th><th>Apertura</th><th>Cierre</th>
-              <th className="num">Ventas</th><th className="num">Vendido</th><th className="num">Efectivo esperado</th><th>Arqueo</th><th />
+              <th>Caja</th><th>Vendedor</th><th>Turno</th>
+              <th className="num">Ventas</th><th className="num">Vendido</th><th>Arqueo</th><th />
             </tr>
           </thead>
           <tbody>
-            {cargando && <tr><td colSpan="9" className="empty-state">Cargando…</td></tr>}
-            {!cargando && datos?.cajas.length === 0 && <tr><td colSpan="9" className="empty-state">No hay cajas en el periodo seleccionado.</td></tr>}
+            {cargando && <tr><td colSpan="7" className="empty-state">Cargando…</td></tr>}
+            {!cargando && datos?.cajas.length === 0 && <tr><td colSpan="7" className="empty-state">No hay cajas en el periodo seleccionado.</td></tr>}
             {!cargando && datos?.cajas.map((c) => (
               <tr key={c.id}>
-                <td className="mono"><strong>{c.codigo}</strong></td>
+                <td className="mono nowrap"><strong>{c.codigo}</strong></td>
                 <td>{c.usuario_nombre}</td>
-                <td className="nowrap">{fechaHora(c.fecha_apertura)}</td>
-                <td className="nowrap">{c.estado === 'abierta' ? <span className="badge badge-green">Abierta</span> : fechaHora(c.fecha_cierre)}</td>
+                <td className="nowrap">
+                  {fechaHora(c.fecha_apertura)}
+                  <div className="cell-sub">{c.estado === 'abierta' ? <span className="badge badge-green">Abierta</span> : `Cierre: ${fechaHora(c.fecha_cierre)}`}</div>
+                </td>
                 <td className="num">{c.resumen.ventas_completadas}{c.resumen.ventas_anuladas ? <div className="cell-sub">{c.resumen.ventas_anuladas} anulada(s)</div> : null}</td>
                 <td className="num">{money(c.resumen.total_vendido)}</td>
-                <td className="num">{money(c.efectivo_esperado ?? c.resumen.efectivo_esperado)}</td>
                 <td>
                   {c.estado === 'abierta' ? <span className="badge badge-gray">Pendiente</span> : <DiferenciaBadge valor={c.diferencia} />}
-                  {c.observacion_cierre && <div className="cell-sub" title={c.observacion_cierre}>{c.observacion_cierre}</div>}
+                  {c.observacion_cierre && <div className="cell-sub obs-corta" title={c.observacion_cierre}>{c.observacion_cierre}</div>}
                 </td>
                 <td><button type="button" className="btn btn-ghost btn-sm" onClick={() => ver(c.id)}><Icon name="eye" size={14} /> Ver</button></td>
               </tr>

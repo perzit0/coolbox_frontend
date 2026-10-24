@@ -395,3 +395,8 @@ a.btn, .btn { text-decoration: none; }
 .ticket-firmas span { flex: 1; border-top: 1px solid var(--cb-black); text-align: center; padding-top: .25rem; }
 @media (max-width: 720px) { .arqueo-grid, .arqueo-resumen { grid-template-columns: 1fr; } }
 .caja-ventas { margin-top: 1.25rem; }
+.text-red { color: var(--cb-red); }
+.obs-corta { max-width: 11rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.caja-bloqueo { padding: 2rem 2rem 2.25rem; }
+.caja-bloqueo .card-title { margin: 0 0 .4rem; }
+.caja-bloqueo .page-subtitle { margin: 0 0 1.25rem; }
