@@ -345,9 +345,11 @@ body.modal-open { overflow: hidden; }
   .sidebar, .mobile-bar, .toast-stack, .no-print, .filter-bar, .page-header .actions-inline { display: none !important; }
   .layout-main { margin: 0 !important; }
   body { background: #fff; }
-  body.modal-open .layout { display: none; }
-  body.modal-open .modal-backdrop { position: static; background: none; backdrop-filter: none; padding: 0; }
-  body.modal-open .modal-card { box-shadow: none; border: 0; max-height: none; }
+  body.modal-open #root { display: none; }
+  body.modal-open { min-height: 0; }
+  body.modal-open .modal-backdrop { position: static; display: block; background: none; backdrop-filter: none; padding: 0; }
+  body.modal-open .modal-card { box-shadow: none; border: 0; max-height: none; max-width: none; overflow: visible; animation: none; }
+  body.modal-open .modal-body { overflow: visible; max-height: none; padding: 0; }
   body.modal-open .modal-header, body.modal-open .modal-footer, body.modal-open .alert { display: none; }
   body.modal-open .ticket { border: 0; max-width: 80mm; padding: 0; }
   .card, .stat-card, .table-wrapper { box-shadow: none; break-inside: avoid; }

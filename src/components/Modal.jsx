@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import Icon from './Icon'
 
 /** Modal accesible: cierra con Escape o clic fuera. size: sm | md | lg */
@@ -14,7 +15,7 @@ export default function Modal({ titulo, subtitulo, onClose, children, footer, si
   }, [onClose])
 
   const Contenedor = as
-  return (
+  return createPortal(
     <div className="modal-backdrop" onMouseDown={(e) => e.target === e.currentTarget && onClose?.()}>
       <Contenedor className={`modal-card modal-${size}`} role="dialog" aria-modal="true" onSubmit={onSubmit}>
         <header className="modal-header">
@@ -27,6 +28,7 @@ export default function Modal({ titulo, subtitulo, onClose, children, footer, si
         <div className="modal-body">{children}</div>
         {footer && <div className="modal-footer">{footer}</div>}
       </Contenedor>
-    </div>
+    </div>,
+    document.body,
   )
 }
