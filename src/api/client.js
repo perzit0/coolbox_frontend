@@ -115,6 +115,9 @@ export const ventasApi = {
 export const cajaApi = {
   miCaja: () => api('/cajas/mi-caja'),
   abrir: (monto_apertura) => api('/cajas/abrir', json('POST', { monto_apertura })),
+  cerrar: (conteo, observacion) => api('/cajas/cerrar', json('POST', { conteo, observacion })),
+  misCajas: () => api('/cajas/mis-cajas'),
+  obtener: (id) => api(`/cajas/${id}`),
 }
 
 export const reportesApi = {

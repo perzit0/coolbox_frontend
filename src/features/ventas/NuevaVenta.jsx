@@ -5,7 +5,7 @@ import { useFeedback } from '../../components/Feedback'
 import Icon from '../../components/Icon'
 import ProductoImagen from '../../components/ProductoImagen'
 import SkuCode from '../../components/SkuCode'
-import { METODOS_PAGO, money } from '../../utils/format'
+import { hoyLima, METODOS_PAGO, money } from '../../utils/format'
 import useCatalogo from '../productos/useCatalogo'
 import ComprobanteModal from './ComprobanteModal'
 
@@ -99,7 +99,7 @@ export default function NuevaVenta({ sesion }) {
       cargar(); cargarCaja()
     } catch (err) {
       setError(err.detail || 'No fue posible registrar la venta.')
-      if (err.code === 'caja_cerrada') setCaja(null)
+      if (err.code === 'caja_cerrada' || err.code === 'caja_vencida') cargarCaja()
       cargar()
     } finally { setEnviando(false) }
   }
@@ -110,14 +110,17 @@ export default function NuevaVenta({ sesion }) {
 
   if (caja === undefined) return <div className="loading-page"><span className="spinner spinner-dark" /> Verificando tu caja…</div>
 
-  // Regla de negocio: sin caja abierta no se registran ventas
-  if (caja === null) {
+  // Reglas de negocio: sin caja abierta (o con una caja de un día anterior) no se registran ventas
+  const vencida = caja && new Date(caja.fecha_apertura).toLocaleDateString('en-CA', { timeZone: 'America/Lima' }) < hoyLima()
+  if (caja === null || vencida) {
     return (
       <div className="card caja-bloqueo">
         <div className="icon-big"><Icon name="wallet" size={40} /></div>
-        <h2 className="card-title">Tu caja está cerrada</h2>
-        <p className="page-subtitle">Para registrar ventas primero abre tu caja indicando el fondo inicial en efectivo.</p>
-        <Link to="/caja" className="btn btn-primary btn-lg"><Icon name="wallet" /> Abrir mi caja</Link>
+        <h2 className="card-title">{vencida ? `Tu caja ${caja.codigo} es de un día anterior` : 'Tu caja está cerrada'}</h2>
+        <p className="page-subtitle">
+          {vencida ? 'Ciérrala con su arqueo y abre la caja de hoy para seguir vendiendo.' : 'Para registrar ventas primero abre tu caja indicando el fondo inicial en efectivo.'}
+        </p>
+        <Link to="/caja" className="btn btn-primary btn-lg"><Icon name="wallet" /> {vencida ? 'Ir a cerrar mi caja' : 'Abrir mi caja'}</Link>
       </div>
     )
   }

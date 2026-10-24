@@ -378,3 +378,19 @@ a.btn, .btn { text-decoration: none; }
 .caja-bloqueo { max-width: 560px; margin: 3rem auto; text-align: center; }
 .caja-bloqueo .icon-big { color: var(--cb-red); margin-bottom: .75rem; }
 .caja-pill { display: inline-flex; align-items: center; gap: .4rem; font-size: .85rem; color: var(--cb-slate); }
+.arqueo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+.arqueo-titulo { margin: 0 0 .5rem; font-size: .8rem; text-transform: uppercase; letter-spacing: .06em; color: var(--cb-muted); }
+.arqueo-fila { display: grid; grid-template-columns: 5.5rem 1rem 1fr 6rem; align-items: center; gap: .4rem; margin-bottom: .4rem; }
+.arqueo-den { font-weight: 700; }
+.arqueo-x { color: var(--cb-muted); text-align: center; }
+.arqueo-sub { text-align: right; font-variant-numeric: tabular-nums; color: var(--cb-slate); }
+.arqueo-resumen { display: grid; grid-template-columns: repeat(3, 1fr); gap: .75rem; margin: 1.25rem 0 1rem; }
+.arqueo-resumen > div { border: 1px solid var(--cb-border-strong); border-radius: 8px; padding: .6rem .8rem; display: flex; flex-direction: column; gap: .15rem; }
+.arqueo-resumen span { font-size: .78rem; color: var(--cb-muted); }
+.arqueo-resumen strong { font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+.arqueo-dif.ok { border-color: #16a34a; background: #f0fdf4; }
+.arqueo-dif.sobra { border-color: #ca8a04; background: #fefce8; }
+.arqueo-dif.falta { border-color: var(--cb-red); background: var(--cb-red-soft-2); }
+.ticket-firmas { display: flex; justify-content: space-between; gap: 1rem; margin-top: 2.2rem; font-size: .72rem; color: var(--cb-muted); }
+.ticket-firmas span { flex: 1; border-top: 1px solid var(--cb-black); text-align: center; padding-top: .25rem; }
+@media (max-width: 720px) { .arqueo-grid, .arqueo-resumen { grid-template-columns: 1fr; } }

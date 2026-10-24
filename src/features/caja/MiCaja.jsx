@@ -3,7 +3,9 @@ import { Link } from 'react-router-dom'
 import { cajaApi } from '../../api/client'
 import { useFeedback } from '../../components/Feedback'
 import Icon from '../../components/Icon'
-import { fechaHora, METODOS_PAGO, money, plural } from '../../utils/format'
+import { fechaHora, hoyLima, METODOS_PAGO, money, plural } from '../../utils/format'
+import CierreCajaModal from './CierreCajaModal'
+import ReporteCierreModal from './ReporteCierreModal'
 
 const FONDOS_SUGERIDOS = [100, 200, 300, 500]
 
@@ -14,9 +16,39 @@ export default function MiCaja() {
   const [fondo, setFondo] = useState('')
   const [error, setError] = useState('')
   const [enviando, setEnviando] = useState(false)
+  const [cerrando, setCerrando] = useState(false)
+  const [reporte, setReporte] = useState(null) // { caja, recien }
+  const [historial, setHistorial] = useState([])
 
-  const cargar = () => cajaApi.miCaja().then((r) => setCaja(r.caja)).catch((err) => setError(err.detail))
+  const cargar = () => {
+    cajaApi.miCaja().then((r) => setCaja(r.caja)).catch((err) => setError(err.detail))
+    cajaApi.misCajas().then((r) => setHistorial(r.cajas.filter((c) => c.estado === 'cerrada'))).catch(() => {})
+  }
   useEffect(() => { cargar() }, [])
+
+  const verReporte = (id) => cajaApi.obtener(id).then((r) => setReporte({ caja: r.caja })).catch((err) => fb.error(err.detail))
+
+  const historialCard = historial.length > 0 && (
+    <div className="card">
+      <div className="card-header"><h3 className="card-title">Mis últimos cierres</h3></div>
+      <table className="data-table">
+        <thead><tr><th>Caja</th><th>Apertura</th><th>Cierre</th><th className="num">Vendido</th><th className="num">Diferencia</th><th /></tr></thead>
+        <tbody>
+          {historial.map((c) => (
+            <tr key={c.id}>
+              <td><strong>{c.codigo}</strong></td>
+              <td>{fechaHora(c.fecha_apertura)}</td>
+              <td>{fechaHora(c.fecha_cierre)}</td>
+              <td className="num">{money(c.resumen.total_vendido)}</td>
+              <td className="num"><DiferenciaBadge valor={c.diferencia} /></td>
+              <td><button type="button" className="btn btn-ghost btn-sm" onClick={() => verReporte(c.id)}><Icon name="eye" size={14} /> Ver</button></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+  const reporteModal = reporte && <ReporteCierreModal caja={reporte.caja} recienCerrada={reporte.recien} onClose={() => setReporte(null)} />
 
   async function abrir(e) {
     e.preventDefault()
@@ -62,11 +94,14 @@ export default function MiCaja() {
             </button>
           </form>
         </div>
+        {historialCard}
+        {reporteModal}
       </>
     )
   }
 
   const r = caja.resumen
+  const vencida = new Date(caja.fecha_apertura).toLocaleDateString('en-CA', { timeZone: 'America/Lima' }) < hoyLima()
   return (
     <>
       <div className="page-header">
@@ -76,9 +111,16 @@ export default function MiCaja() {
         </div>
         <div className="actions-inline">
           <button type="button" className="btn btn-outline" onClick={cargar}><Icon name="refresh" /> Actualizar</button>
-          <Link to="/ventas/nueva" className="btn btn-primary"><Icon name="cart" /> Nueva venta</Link>
+          <button type="button" className="btn btn-dark" onClick={() => setCerrando(true)}><Icon name="lock" /> Cerrar caja</button>
+          {!vencida && <Link to="/ventas/nueva" className="btn btn-primary"><Icon name="cart" /> Nueva venta</Link>}
         </div>
       </div>
+
+      {vencida && (
+        <div className="alert alert-error">
+          Esta caja se abrió un día anterior y no puede recibir ventas nuevas. Ciérrala con su arqueo para abrir la de hoy.
+        </div>
+      )}
 
       <div className="stats-grid">
         <div className="stat-card">
@@ -106,6 +148,24 @@ export default function MiCaja() {
           </table>
         )}
       </div>
+      {historialCard}
+
+      {cerrando && (
+        <CierreCajaModal caja={caja} onClose={() => setCerrando(false)}
+          onCerrada={(cerrada) => {
+            setCerrando(false); setCaja(null); setFondo('')
+            setReporte({ caja: cerrada, recien: true })
+            fb.ok(`Caja ${cerrada.codigo} cerrada.`)
+            cargar()
+          }} />
+      )}
+      {reporteModal}
     </>
   )
+}
+
+export function DiferenciaBadge({ valor }) {
+  if (valor == null) return <span className="badge badge-gray">—</span>
+  if (valor === 0) return <span className="badge badge-green">Cuadrada</span>
+  return <span className={`badge ${valor > 0 ? 'badge-yellow' : 'badge-red'}`}>{valor > 0 ? 'Sobra ' : 'Falta '}{money(Math.abs(valor))}</span>
 }
