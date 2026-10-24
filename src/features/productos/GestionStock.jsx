@@ -10,7 +10,7 @@ import KardexModal from './KardexModal'
 import MovimientoModal from './MovimientoModal'
 import useCatalogo from './useCatalogo'
 
-/** Vista del Almacenero: entradas, salidas y ajustes con motivo (todo queda en el kardex). */
+/** Vista de almacén (Administrador): entradas, salidas y ajustes con motivo (todo queda en el kardex). */
 export default function GestionStock() {
   const fb = useFeedback()
   const { familias, marcas } = useCatalogo()

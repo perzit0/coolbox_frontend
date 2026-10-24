@@ -27,7 +27,6 @@ function inicioDeRol(rol) {
   if (permisos.has('ventas.crear')) return '/ventas/nueva'
   if (permisos.has('reportes.ver')) return '/reportes'
   if (permisos.has('ventas.ver')) return '/ventas'
-  if (permisos.has('stock.actualizar')) return '/almacen'
   return '/productos'
 }
 
@@ -123,7 +122,15 @@ export default function App() {
     <Shell
       sesion={sesion}
       onLogout={() => cerrarSesion()}
-      onCambiarRol={() => { setSesion({ ...sesion, rol_activo: null }); navigate('/seleccionar-rol') }}
+      onCambiarRol={async () => {
+        // Se pide un token sin rol: el rol anterior deja de valer aunque se recargue la página
+        try {
+          const r = await authApi.liberarRol()
+          tokenStore.set(r.access_token)
+          setSesion({ usuario: r.usuario, rol_activo: null })
+          navigate('/seleccionar-rol')
+        } catch (err) { fb.error(err.detail || 'No fue posible cambiar de rol.') }
+      }}
     >
       <Routes>
         {rol.es_admin && <Route path="/admin" element={<DashboardAdmin sesion={sesion} />} />}

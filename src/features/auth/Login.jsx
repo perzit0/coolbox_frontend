@@ -5,7 +5,7 @@ import { PasswordInput } from '../../components/PasswordFields'
 
 const DEMO = [
   { email: 'admin@coolbox.com.pe', password: 'Admin123!', rol: 'Administrador' },
-  { email: 'jperezl@coolbox.com.pe', password: 'Vendedor123!', rol: 'Vendedor / Almacenero' },
+  { email: 'jperezl@coolbox.com.pe', password: 'Vendedor123!', rol: 'Vendedor' },
   { email: 'mtorresr@coolbox.com.pe', password: 'Supervisor123!', rol: 'Supervisor de Ventas' },
 ]
 
@@ -56,7 +56,7 @@ export default function Login({ onSuccess }) {
       <section className="login-form-side">
         <div className="login-form-card">
           <h2>Iniciar sesión</h2>
-          <p className="subtitle">Administradores, vendedores, almaceneros y supervisores de ventas.</p>
+          <p className="subtitle">Administradores, vendedores y supervisores de ventas.</p>
 
           <form onSubmit={submit} noValidate>
             {error && <div className="alert alert-error">{error}</div>}

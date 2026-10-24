@@ -65,6 +65,7 @@ function qs(params = {}) {
 export const authApi = {
   login: (email, password) => api('/auth/login', json('POST', { email, password })),
   seleccionarRol: (rol_id) => api('/auth/seleccionar-rol', json('POST', { rol_id })),
+  liberarRol: () => api('/auth/liberar-rol', json('POST', {})),
   me: () => api('/auth/me'),
   cambiarPassword: (password_actual, password_nueva) =>
     api('/auth/cambiar-password', json('POST', { password_actual, password_nueva })),

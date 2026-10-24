@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { authApi } from '../../api/client'
 import Icon from '../../components/Icon'
 
-const ICONO_ROL = { administrador: 'dashboard', vendedor: 'cart', almacenero: 'warehouse', supervisor: 'chart' }
+const ICONO_ROL = { administrador: 'dashboard', vendedor: 'cart', supervisor: 'chart' }
 
 /** Al iniciar sesión (o al pulsar "Cambiar rol") el usuario con más de un rol
  * elige con cuál operará. El rol Administrador también se elige aquí. El

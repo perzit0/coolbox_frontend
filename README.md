@@ -26,7 +26,7 @@ por lo que cambiarla en Vercel requiere un nuevo despliegue.
 - `/login` — Ingreso único para todo el personal.
 - `/seleccionar-rol` — Solo si el usuario tiene más de un rol; aquí se elige también el rol Administrador.
 - `/admin/*` — Panel administrativo (rol activo Administrador): usuarios, productos, ventas, reportes.
-- `/tienda/*` — Operación en tienda (Vendedor, Almacenero, Supervisor de Ventas): nueva venta, historial, catálogo, almacén, reportes.
+- `/tienda/*` — Operación en tienda (Vendedor y Supervisor de Ventas): nueva venta, historial, catálogo y reportes.
 
 La opción **Anular** del historial de ventas solo aparece si el rol activo
 tiene el permiso `ventas.anular` (Supervisor de Ventas o Administrador).
