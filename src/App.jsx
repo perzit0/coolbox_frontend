@@ -18,6 +18,7 @@ import GuiaSku from './features/productos/GuiaSku'
 import NuevaVenta from './features/ventas/NuevaVenta'
 import HistorialVentas from './features/ventas/HistorialVentas'
 import MiCuenta from './features/cuenta/MiCuenta'
+import MiCaja from './features/caja/MiCaja'
 
 /** Página de inicio según el rol activo. */
 function inicioDeRol(rol) {
@@ -135,6 +136,7 @@ export default function App() {
       <Routes>
         {rol.es_admin && <Route path="/admin" element={<DashboardAdmin sesion={sesion} />} />}
         {puede('usuarios.ver') && <Route path="/admin/usuarios" element={<GestionUsuarios sesion={sesion} />} />}
+        {puede('caja.operar') && <Route path="/caja" element={<MiCaja />} />}
         {puede('ventas.crear') && <Route path="/ventas/nueva" element={<NuevaVenta sesion={sesion} />} />}
         {puede('ventas.ver') && <Route path="/ventas" element={<HistorialVentas puedeAnular={puede('ventas.anular')} />} />}
         {puede('reportes.ver') && <Route path="/reportes" element={<Reportes />} />}

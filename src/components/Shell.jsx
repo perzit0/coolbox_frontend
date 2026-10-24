@@ -6,6 +6,7 @@ import Icon from './Icon'
 export const MENU = [
   { seccion: 'General' },
   { to: '/admin', label: 'Panel', icon: 'dashboard', soloAdmin: true, end: true },
+  { to: '/caja', label: 'Mi caja', icon: 'wallet', perm: 'caja.operar' },
   { to: '/ventas/nueva', label: 'Nueva venta', icon: 'cart', perm: 'ventas.crear' },
   { to: '/ventas', label: 'Historial de ventas', icon: 'receipt', perm: 'ventas.ver', end: true },
   { to: '/reportes', label: 'Reportes', icon: 'chart', perm: 'reportes.ver' },

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { productosApi, ventasApi } from '../../api/client'
+import { Link } from 'react-router-dom'
+import { cajaApi, productosApi, ventasApi } from '../../api/client'
 import { useFeedback } from '../../components/Feedback'
 import Icon from '../../components/Icon'
 import ProductoImagen from '../../components/ProductoImagen'
@@ -24,6 +25,10 @@ export default function NuevaVenta({ sesion }) {
   const [enviando, setEnviando] = useState(false)
   const [comprobante, setComprobante] = useState(null)
   const buscador = useRef(null)
+  const [caja, setCaja] = useState(undefined) // undefined = cargando, null = sin caja abierta
+
+  const cargarCaja = () => cajaApi.miCaja().then((r) => setCaja(r.caja)).catch(() => setCaja(null))
+  useEffect(() => { cargarCaja() }, [])
 
   async function cargar() {
     try {
@@ -91,9 +96,10 @@ export default function NuevaVenta({ sesion }) {
       })
       setComprobante(r.venta)
       setCarrito({}); setClienteNombre(''); setMetodoPago('efectivo'); setRecibido('')
-      cargar()
+      cargar(); cargarCaja()
     } catch (err) {
       setError(err.detail || 'No fue posible registrar la venta.')
+      if (err.code === 'caja_cerrada') setCaja(null)
       cargar()
     } finally { setEnviando(false) }
   }
@@ -101,6 +107,20 @@ export default function NuevaVenta({ sesion }) {
   const sugerencias = totales.total > 0
     ? [...new Set([Math.ceil(totales.total / 10) * 10, Math.ceil(totales.total / 50) * 50, Math.ceil(totales.total / 100) * 100])].slice(0, 3)
     : []
+
+  if (caja === undefined) return <div className="loading-page"><span className="spinner spinner-dark" /> Verificando tu caja…</div>
+
+  // Regla de negocio: sin caja abierta no se registran ventas
+  if (caja === null) {
+    return (
+      <div className="card caja-bloqueo">
+        <div className="icon-big"><Icon name="wallet" size={40} /></div>
+        <h2 className="card-title">Tu caja está cerrada</h2>
+        <p className="page-subtitle">Para registrar ventas primero abre tu caja indicando el fondo inicial en efectivo.</p>
+        <Link to="/caja" className="btn btn-primary btn-lg"><Icon name="wallet" /> Abrir mi caja</Link>
+      </div>
+    )
+  }
 
   return (
     <>
@@ -112,6 +132,10 @@ export default function NuevaVenta({ sesion }) {
             Escribe o escanea el SKU y presiona Enter para agregarlo.
           </p>
         </div>
+        <Link to="/caja" className="caja-pill" title="Ver mi caja">
+          <span className="badge badge-green">Caja {caja.codigo}</span>
+          <span>Vendido: {money(caja.resumen.total_vendido)}</span>
+        </Link>
       </div>
 
       <div className="filter-bar">

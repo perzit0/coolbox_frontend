@@ -112,6 +112,11 @@ export const ventasApi = {
   anular: (id, motivo) => api(`/ventas/${id}/anular`, json('POST', { motivo })),
 }
 
+export const cajaApi = {
+  miCaja: () => api('/cajas/mi-caja'),
+  abrir: (monto_apertura) => api('/cajas/abrir', json('POST', { monto_apertura })),
+}
+
 export const reportesApi = {
   resumen: (params) => api(`/reportes/resumen${qs(params)}`),
   inventario: () => api('/reportes/inventario'),
