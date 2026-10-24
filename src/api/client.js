@@ -118,6 +118,7 @@ export const cajaApi = {
   cerrar: (conteo, observacion) => api('/cajas/cerrar', json('POST', { conteo, observacion })),
   misCajas: () => api('/cajas/mis-cajas'),
   obtener: (id) => api(`/cajas/${id}`),
+  control: (params) => api(`/cajas${qs(params)}`),
 }
 
 export const reportesApi = {

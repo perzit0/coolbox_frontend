@@ -38,7 +38,7 @@ export default function HistorialVentas({ puedeAnular = false }) {
   const anular = async (v) => {
     const motivo = await fb.confirmar({
       titulo: `Anular venta ${v.codigo}`,
-      mensaje: `Se anulará la venta por ${money(v.total)} y se devolverán las unidades al stock. Esta acción queda registrada a tu nombre.`,
+      mensaje: `Se anulará la venta por ${money(v.total)}, se devolverán las unidades al stock y el monto dejará de contar en la caja ${v.caja_codigo || ''}. Esta acción queda registrada a tu nombre.`,
       textoConfirmar: 'Anular venta', peligro: true,
       pedirMotivo: true, etiquetaMotivo: 'Motivo de la anulación', minMotivo: 10,
     })
@@ -118,7 +118,7 @@ export default function HistorialVentas({ puedeAnular = false }) {
               <tr key={v.id} className={v.estado === 'anulada' ? 'row-muted' : ''}>
                 <td className="mono"><strong>{v.codigo}</strong></td>
                 <td className="nowrap">{fechaHora(v.fecha)}</td>
-                <td>{v.usuario_nombre}<div className="cell-sub">{v.rol}</div></td>
+                <td>{v.usuario_nombre}<div className="cell-sub">{v.rol}{v.caja_codigo ? ` · Caja ${v.caja_codigo}` : ''}</div></td>
                 <td>{v.cliente_nombre || '—'}</td>
                 <td>{METODOS_PAGO[v.metodo_pago] || v.metodo_pago}</td>
                 <td className="num">{v.cantidad_items}</td>
@@ -130,7 +130,7 @@ export default function HistorialVentas({ puedeAnular = false }) {
                 <td>
                   <div className="actions-inline nowrap">
                     <button className="btn btn-outline btn-sm" onClick={() => verDetalle(v.id)}><Icon name="eye" size={15} /> Ver</button>
-                    {puedeAnular && v.estado === 'completada' && (
+                    {puedeAnular && v.estado === 'completada' && v.caja_estado !== 'cerrada' && (
                       <button className="btn btn-danger btn-sm" onClick={() => anular(v)}>Anular</button>
                     )}
                   </div>
@@ -144,7 +144,7 @@ export default function HistorialVentas({ puedeAnular = false }) {
 
       {detalle && (
         <ComprobanteModal venta={detalle} onClose={() => setDetalle(null)}
-          onAnular={puedeAnular ? () => anular(detalle) : undefined} />
+          onAnular={puedeAnular && detalle.caja_estado !== 'cerrada' ? () => anular(detalle) : undefined} />
       )}
     </>
   )

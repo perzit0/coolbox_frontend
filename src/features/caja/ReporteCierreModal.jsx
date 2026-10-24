@@ -65,6 +65,26 @@ export default function ReporteCierreModal({ caja, onClose, recienCerrada = fals
         {caja.observacion_cierre && <div className="ticket-foot">Obs.: {caja.observacion_cierre}</div>}
         <div className="ticket-firmas"><span>Vendedor</span><span>Supervisor</span></div>
       </div>
+
+      {caja.ventas && caja.ventas.length > 0 && (
+        <div className="no-print caja-ventas">
+          <h4 className="arqueo-titulo">Ventas del turno</h4>
+          <table className="data-table">
+            <thead><tr><th>Código</th><th>Hora</th><th>Pago</th><th className="num">Total</th><th>Estado</th></tr></thead>
+            <tbody>
+              {caja.ventas.map((v) => (
+                <tr key={v.id}>
+                  <td className="mono">{v.codigo}</td>
+                  <td>{fechaHora(v.fecha)}</td>
+                  <td>{METODOS_PAGO[v.metodo_pago] || v.metodo_pago}</td>
+                  <td className="num">{money(v.total)}</td>
+                  <td><span className={`badge ${v.estado === 'anulada' ? 'badge-red' : 'badge-green'}`}>{v.estado === 'anulada' ? 'Anulada' : 'Completada'}</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </Modal>
   )
 }

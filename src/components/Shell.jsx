@@ -8,6 +8,7 @@ export const MENU = [
   { to: '/admin', label: 'Panel', icon: 'dashboard', soloAdmin: true, end: true },
   { to: '/caja', label: 'Mi caja', icon: 'wallet', perm: 'caja.operar' },
   { to: '/ventas/nueva', label: 'Nueva venta', icon: 'cart', perm: 'ventas.crear' },
+  { to: '/cajas', label: 'Control de cajas', icon: 'scale', perm: 'caja.supervisar' },
   { to: '/ventas', label: 'Historial de ventas', icon: 'receipt', perm: 'ventas.ver', end: true },
   { to: '/reportes', label: 'Reportes', icon: 'chart', perm: 'reportes.ver' },
   { seccion: 'Catálogo e inventario' },

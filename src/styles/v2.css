@@ -394,3 +394,4 @@ a.btn, .btn { text-decoration: none; }
 .ticket-firmas { display: flex; justify-content: space-between; gap: 1rem; margin-top: 2.2rem; font-size: .72rem; color: var(--cb-muted); }
 .ticket-firmas span { flex: 1; border-top: 1px solid var(--cb-black); text-align: center; padding-top: .25rem; }
 @media (max-width: 720px) { .arqueo-grid, .arqueo-resumen { grid-template-columns: 1fr; } }
+.caja-ventas { margin-top: 1.25rem; }

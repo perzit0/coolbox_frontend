@@ -19,6 +19,7 @@ import NuevaVenta from './features/ventas/NuevaVenta'
 import HistorialVentas from './features/ventas/HistorialVentas'
 import MiCuenta from './features/cuenta/MiCuenta'
 import MiCaja from './features/caja/MiCaja'
+import ControlCajas from './features/caja/ControlCajas'
 
 /** Página de inicio según el rol activo. */
 function inicioDeRol(rol) {
@@ -26,6 +27,7 @@ function inicioDeRol(rol) {
   if (rol.es_admin) return '/admin'
   const permisos = new Set(rol.permisos || [])
   if (permisos.has('ventas.crear')) return '/ventas/nueva'
+  if (permisos.has('caja.supervisar')) return '/cajas'
   if (permisos.has('reportes.ver')) return '/reportes'
   if (permisos.has('ventas.ver')) return '/ventas'
   return '/productos'
@@ -137,6 +139,7 @@ export default function App() {
         {rol.es_admin && <Route path="/admin" element={<DashboardAdmin sesion={sesion} />} />}
         {puede('usuarios.ver') && <Route path="/admin/usuarios" element={<GestionUsuarios sesion={sesion} />} />}
         {puede('caja.operar') && <Route path="/caja" element={<MiCaja />} />}
+        {puede('caja.supervisar') && <Route path="/cajas" element={<ControlCajas />} />}
         {puede('ventas.crear') && <Route path="/ventas/nueva" element={<NuevaVenta sesion={sesion} />} />}
         {puede('ventas.ver') && <Route path="/ventas" element={<HistorialVentas puedeAnular={puede('ventas.anular')} />} />}
         {puede('reportes.ver') && <Route path="/reportes" element={<Reportes />} />}
