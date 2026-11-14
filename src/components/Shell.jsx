@@ -11,6 +11,9 @@ export const MENU = [
   { to: '/cajas', label: 'Control de cajas', icon: 'scale', perm: 'caja.supervisar' },
   { to: '/ventas', label: 'Historial de ventas', icon: 'receipt', perm: 'ventas.ver', end: true },
   { to: '/reportes', label: 'Reportes', icon: 'chart', perm: 'reportes.ver' },
+  { seccion: 'Tienda online' },
+  { to: '/pedidos-online', label: 'Pedidos online', icon: 'truck', perm: 'pedidos.gestionar' },
+  { to: '/promociones', label: 'Promociones', icon: 'percent', perm: 'promociones.gestionar' },
   { seccion: 'Catálogo e inventario' },
   { to: '/productos', label: 'Productos', icon: 'box', perm: 'productos.ver' },
   { to: '/almacen', label: 'Almacén', icon: 'warehouse', perm: 'stock.actualizar' },
@@ -41,7 +44,7 @@ export default function Shell({ sesion, onLogout, onCambiarRol, children }) {
     <div className={`layout ${abierto ? 'nav-open' : ''}`}>
       <aside className="sidebar">
         <div className="sidebar-brand">
-          <span className="brand-mark">COOLBOX</span>
+          <span className="brand-mark"><span className="bm-cool">cool</span><span className="bm-box">box</span></span>
           <span className="brand-tag">{rol_activo?.es_admin ? 'Administración' : 'Gestión de tienda'}</span>
         </div>
 
@@ -84,7 +87,7 @@ export default function Shell({ sesion, onLogout, onCambiarRol, children }) {
           <button type="button" className="btn btn-ghost btn-icon" onClick={() => setAbierto(true)} aria-label="Abrir menú">
             <Icon name="menu" size={22} />
           </button>
-          <span className="brand-mark">COOLBOX</span>
+          <span className="brand-mark"><span className="bm-cool">cool</span><span className="bm-box">box</span></span>
           <span className="mobile-role">{rol_activo?.nombre}</span>
         </header>
         <main className="main-content">{children}</main>

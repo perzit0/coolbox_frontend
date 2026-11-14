@@ -6,7 +6,7 @@ import { useFeedback } from '../../components/Feedback'
 import Icon from '../../components/Icon'
 import ProductoImagen from '../../components/ProductoImagen'
 import SkuCode from '../../components/SkuCode'
-import { AYUDA_METODO, fechaHora, hoyLima, METODOS_PAGO, money, PROVEEDORES_POS } from '../../utils/format'
+import { AYUDA_METODO, fechaHora, hoyLima, MARCAS_TARJETA, METODOS_COBRO, METODOS_PAGO, money, PROVEEDORES_POS } from '../../utils/format'
 import useCatalogo from '../productos/useCatalogo'
 import ComprobanteModal from './ComprobanteModal'
 import useAnularVenta from './useAnularVenta'
@@ -17,7 +17,7 @@ const MONTO_BOLETA_CON_DNI = 700 // SUNAT: boletas mayores a S/ 700 identifican 
 const MAX_EN_ESPERA = 5
 const r2 = (n) => Math.round(Number(n || 0) * 100) / 100
 
-const pagoNuevo = (metodo = 'efectivo') => ({ metodo, monto: '', monto_recibido: '', proveedor: 'OpenPay', tipo_tarjeta: '', nro_operacion: '' })
+const pagoNuevo = (metodo = 'efectivo') => ({ metodo, monto: '', monto_recibido: '', proveedor: 'OpenPay', tipo_tarjeta: '', marca_tarjeta: '', nro_operacion: '' })
 const ventaVacia = () => ({ carrito: {}, clienteNombre: '', clienteDocumento: '', descuento: '', descuentoToken: null, descuentoAutorizado: 0, pagos: [pagoNuevo()] })
 
 /* Almacenamiento local por cajero: borrador de la venta en curso (sobrevive a
@@ -115,16 +115,37 @@ export default function NuevaVenta({ sesion }) {
   }
 
   // ---------------- Totales
+  // Promociones vigentes en tienda (2x1, % de descuento...): el servidor calcula la mejor por línea
+  const [cotizacion, setCotizacion] = useState({})
+  useEffect(() => {
+    const items = Object.values(carrito).map((it) => ({ producto_id: it.producto.id, cantidad: it.cantidad }))
+    if (!items.length) { setCotizacion({}); return }
+    let vivo = true
+    const t = setTimeout(() => {
+      ventasApi.cotizar(items).then((r) => {
+        if (vivo) setCotizacion(Object.fromEntries(r.items.map((x) => [x.producto_id, x])))
+      }).catch(() => {})
+    }, 200)
+    return () => { vivo = false; clearTimeout(t) }
+  }, [carrito])
+
   const totales = useMemo(() => {
-    const items = Object.values(carrito)
-    const bruto = r2(items.reduce((acc, it) => acc + it.producto.precio * it.cantidad, 0))
+    const items = Object.values(carrito).map((it) => {
+      const c = cotizacion[it.producto.id]
+      const regular = r2(it.producto.precio * it.cantidad)
+      const vale = c && c.cantidad === it.cantidad
+      return { ...it, regular, neto: vale ? c.neto : regular, promo: vale && c.descuento > 0 ? c.promocion : null, ahorro: vale ? c.descuento : 0 }
+    })
+    const regular = r2(items.reduce((acc, it) => acc + it.regular, 0))
+    const descPromos = r2(items.reduce((acc, it) => acc + it.ahorro, 0))
+    const bruto = r2(regular - descPromos)
     const desc = Math.min(r2(descuento), bruto)
     const total = r2(bruto - desc)
     const base = r2(total / (1 + IGV))
     const unidades = items.reduce((a, it) => a + it.cantidad, 0)
     const pct = bruto ? (desc / bruto) * 100 : 0
-    return { bruto, descuento: desc, pct, total, base, igv: r2(total - base), items, unidades }
-  }, [carrito, descuento])
+    return { regular, descPromos, bruto, descuento: desc, pct, total, base, igv: r2(total - base), items, unidades }
+  }, [carrito, descuento, cotizacion])
 
   const descuentoRequierePin = totales.pct > DESCUENTO_MAX_CAJERO + 1e-9
   const descuentoCubierto = !descuentoRequierePin || (venta.descuentoToken && totales.descuento <= venta.descuentoAutorizado)
@@ -139,7 +160,7 @@ export default function NuevaVenta({ sesion }) {
   const setPago = (i, cambios) => set((v) => ({ pagos: v.pagos.map((p, j) => (j === i ? { ...p, ...cambios } : p)) }))
   const agregarPago = () => set((v) => {
     const usados = new Set(v.pagos.map((p) => p.metodo))
-    const metodo = ['tarjeta', 'yape', 'efectivo', 'qr', 'plin'].find((m) => !usados.has(m)) || 'tarjeta'
+    const metodo = ['tarjeta', 'yape', 'efectivo', 'plin'].find((m) => !usados.has(m)) || 'tarjeta'
     const primero = v.pagos.length === 1 ? [{ ...v.pagos[0], monto: v.pagos[0].monto || '' }] : v.pagos
     return { pagos: [...primero, pagoNuevo(metodo)] }
   })
@@ -153,6 +174,7 @@ export default function NuevaVenta({ sesion }) {
       return null
     }
     if (!/^[A-Za-z0-9-]{4,30}$/.test(p.nro_operacion.trim())) return 'Falta el N° de operación.'
+    if (p.metodo === 'tarjeta' && !p.marca_tarjeta) return 'Indica la marca de la tarjeta.'
     if (p.metodo === 'tarjeta' && !p.tipo_tarjeta) return 'Indica débito o crédito.'
     return null
   })
@@ -192,6 +214,7 @@ export default function NuevaVenta({ sesion }) {
           monto_recibido: p.metodo === 'efectivo' && p.monto_recibido !== '' ? Number(p.monto_recibido) : null,
           proveedor: ['tarjeta', 'qr'].includes(p.metodo) ? p.proveedor : null,
           tipo_tarjeta: p.metodo === 'tarjeta' ? p.tipo_tarjeta : null,
+          marca_tarjeta: p.metodo === 'tarjeta' ? p.marca_tarjeta : null,
           nro_operacion: p.metodo === 'efectivo' ? null : p.nro_operacion.trim(),
         })),
         items: totales.items.map((it) => ({ producto_id: it.producto.id, cantidad: it.cantidad })),
@@ -362,6 +385,7 @@ export default function NuevaVenta({ sesion }) {
                 <div className="cart-item-info">
                   <div className="cart-item-name">{it.producto.nombre}</div>
                   <div className="cart-item-price">{it.producto.sku} · {money(it.producto.precio)} c/u</div>
+                  {it.promo && <div className="cart-item-promo"><Icon name="tag" size={12} /> {it.promo.etiqueta} · {it.promo.nombre}</div>}
                 </div>
                 <div className="qty">
                   <button type="button" onClick={() => reducir(it.producto.id)} aria-label="Restar (requiere supervisor)" title="Requiere autorización del supervisor"><Icon name="minus" size={14} /></button>
@@ -369,7 +393,8 @@ export default function NuevaVenta({ sesion }) {
                   <button type="button" onClick={() => agregar(it.producto)} disabled={it.cantidad >= it.producto.stock} aria-label="Sumar"><Icon name="plus" size={14} /></button>
                 </div>
                 <div className="cart-item-sub">
-                  {money(it.producto.precio * it.cantidad)}
+                  {it.ahorro > 0 && <s className="cart-item-old">{money(it.regular)}</s>}
+                  {money(it.neto)}
                   <button type="button" className="link-btn" onClick={() => reducir(it.producto.id, true)} title="Requiere autorización del supervisor">Quitar</button>
                 </div>
               </div>
@@ -425,9 +450,9 @@ export default function NuevaVenta({ sesion }) {
               return (
                 <div key={i} className="pago-linea">
                   <div className="pay-methods">
-                    {Object.entries(METODOS_PAGO).map(([id, label]) => (
+                    {METODOS_COBRO.map((id) => (
                       <button key={id} type="button" className={`pay-method ${p.metodo === id ? 'active' : ''}`}
-                        onClick={() => setPago(i, { metodo: id })}>{label.replace(' (POS)', '')}</button>
+                        onClick={() => setPago(i, { metodo: id })}>{METODOS_PAGO[id].replace(' (POS)', '')}</button>
                     ))}
                   </div>
                   <div className="form-help">{AYUDA_METODO[p.metodo]}</div>
@@ -461,6 +486,13 @@ export default function NuevaVenta({ sesion }) {
                     </>
                   )}
 
+                  {p.metodo === 'tarjeta' && (
+                    <div className="chip-row marcas-tarjeta">
+                      {MARCAS_TARJETA.map((m) => (
+                        <button key={m} type="button" className={`chip ${p.marca_tarjeta === m ? 'chip-on' : ''}`} onClick={() => setPago(i, { marca_tarjeta: m })}>{m}</button>
+                      ))}
+                    </div>
+                  )}
                   {['tarjeta', 'qr'].includes(p.metodo) && (
                     <div className="form-row compact-row">
                       <select className="form-control" value={p.proveedor} onChange={(e) => setPago(i, { proveedor: e.target.value })}>
@@ -493,6 +525,8 @@ export default function NuevaVenta({ sesion }) {
           </div>
 
           <div className="cart-totals">
+            {totales.descPromos > 0 && <div className="cart-total-row"><span>Precio regular</span><span>{money(totales.regular)}</span></div>}
+            {totales.descPromos > 0 && <div className="cart-total-row promo"><span>Promociones</span><span>- {money(totales.descPromos)}</span></div>}
             {totales.descuento > 0 && <div className="cart-total-row"><span>Subtotal</span><span>{money(totales.bruto)}</span></div>}
             {totales.descuento > 0 && <div className="cart-total-row"><span>Descuento</span><span>- {money(totales.descuento)}</span></div>}
             <div className="cart-total-row"><span>Op. gravada (sin IGV)</span><span>{money(totales.base)}</span></div>

@@ -7,7 +7,7 @@
   --sidebar-w: 248px;
   --cb-blue-bg: #e0f2fe;
   --cb-blue: #075985;
-  --sku-0: #dc2626; /* familia */
+  --sku-0: #EA0029; /* familia */
   --sku-1: #0a0a0a; /* subfamilia */
   --sku-2: #525252; /* marca */
   --sku-3: #a3a3a3; /* correlativo */
@@ -439,3 +439,49 @@ a.btn, .btn { text-decoration: none; }
 @media (max-width: 640px) { .compact-row { grid-template-columns: 1fr; } }
 .card-title { display: inline-flex; align-items: center; gap: .4rem; }
 .pago-etq { font-size: .72rem; font-weight: 700; color: var(--cb-muted); min-width: 3.6rem; text-transform: uppercase; letter-spacing: .04em; }
+
+/* Logotipo en texto con los colores de coolbox.pe */
+.brand-mark { background: none !important; padding: 0 !important; letter-spacing: -0.5px !important; font-weight: 800 !important; font-size: 1.6rem !important; text-transform: none; }
+.bm-cool { color: var(--cb-red); }
+.bm-box { color: #fff; }
+.mobile-bar .bm-box { color: var(--cb-text); }
+.cart-item-promo { font-size: 0.72rem; color: var(--cb-success); font-weight: 700; display: flex; gap: 4px; align-items: center; }
+.cart-item-old { display: block; color: var(--cb-muted); font-size: 0.75rem; font-weight: 400; }
+.cart-total-row.promo { color: var(--cb-success); }
+.marcas-tarjeta { margin-top: 0.4rem; }
+.chip.chip-on { background: var(--cb-charcoal); color: #fff; border-color: var(--cb-charcoal); }
+
+/* ---------- Tienda online: promociones y pedidos ---------- */
+.form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1rem; }
+.form-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0 1rem; }
+@media (max-width: 720px) { .form-grid-2, .form-grid-3 { grid-template-columns: 1fr; } }
+.check-row { display: flex; gap: 0.5rem; align-items: center; font-size: 0.9rem; margin-top: 0.75rem; cursor: pointer; }
+.check-row input { accent-color: var(--cb-red); width: 16px; height: 16px; }
+.empty-cell { text-align: center; color: var(--cb-muted); padding: 2rem !important; }
+.fila-apagada td { opacity: 0.55; }
+.acciones-fila { white-space: nowrap; text-align: right; }
+.filtro-estado { margin-bottom: 1rem; }
+.promo-chip { display: inline-block; font-weight: 800; font-size: 0.78rem; padding: 0.2rem 0.55rem; border-radius: 4px; background: var(--cb-red); color: #fff; text-transform: uppercase; white-space: nowrap; }
+.promo-chip.t-nxm, .promo-chip.t-segunda_unidad, .promo-chip.t-volumen { background: #FFD200; color: var(--cb-red); }
+.promo-chip.t-precio_especial { background: var(--cb-charcoal); }
+.promo-chip.t-cupon { background: #3370C5; }
+.presets { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.75rem; }
+.preset { display: flex; flex-direction: column; align-items: flex-start; gap: 0.5rem; text-align: left; border: 1px solid var(--cb-border); background: #fff; border-radius: 10px; padding: 0.9rem; transition: border-color .15s, box-shadow .15s; }
+.preset:hover { border-color: var(--cb-red); box-shadow: var(--cb-shadow); }
+.preset .promo-chip { font-size: 1rem; }
+.preset small { color: var(--cb-text-soft); }
+.promo-preview { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.75rem; background: var(--cb-page-bg); border: 1px dashed var(--cb-border-strong); border-radius: 8px; padding: 0.75rem; margin-bottom: 1rem; }
+.promo-preview > span:nth-child(2) { font-weight: 700; }
+.promo-preview small { font-size: 0.72rem; }
+.promo-productos { border: 1px solid var(--cb-border); border-radius: 8px; padding: 0.75rem; display: flex; flex-direction: column; gap: 0.6rem; }
+.promo-buscar { display: flex; align-items: center; gap: 0.5rem; }
+.promo-resultados { display: flex; flex-direction: column; gap: 2px; max-height: 210px; overflow: auto; }
+.promo-res { display: grid; grid-template-columns: 32px 1fr auto 18px; gap: 0.6rem; align-items: center; text-align: left; background: none; border: 0; padding: 0.35rem 0.4rem; border-radius: 6px; font-size: 0.85rem; }
+.promo-res:hover { background: var(--cb-red-soft-2); }
+.promo-res small { color: var(--cb-muted); white-space: nowrap; }
+.data-table.compact td, .data-table.compact th { padding: 0.4rem 0.5rem; font-size: 0.85rem; }
+.input-precio { width: 100px; display: inline-block; text-align: right; }
+.pedido-acciones { display: flex; gap: 0.4rem; justify-content: flex-end; flex-wrap: wrap; }
+.pedido-detalle-items { list-style: none; padding: 0; margin: 0.5rem 0; font-size: 0.85rem; }
+.pedido-detalle-items li { display: flex; justify-content: space-between; gap: 1rem; padding: 0.3rem 0; border-bottom: 1px solid var(--cb-border); }
+.badge-orange { background: #fff1e0; color: #b55d00; }

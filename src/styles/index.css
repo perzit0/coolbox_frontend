@@ -1,34 +1,35 @@
 /* =========================================================
    COOLBOX — Sistema de Gestión de Tienda
-   Paleta institucional: rojo Coolbox + negro carbón
+   Paleta y tipografía de coolbox.pe: rojo #EA0029, texto #212121,
+   gris #434343 y fuente Roboto Flex (igual que la tienda online)
    ========================================================= */
 
 :root {
-  --cb-red: #dc2626;
-  --cb-red-dark: #991b1b;
-  --cb-red-darker: #7f1d1d;
-  --cb-red-soft: #fee2e2;
-  --cb-red-soft-2: #fef2f2;
+  --cb-red: #EA0029;
+  --cb-red-dark: #C20022;
+  --cb-red-darker: #8f0019;
+  --cb-red-soft: #fde3e8;
+  --cb-red-soft-2: #fff4f6;
 
   --cb-black: #0a0a0a;
-  --cb-charcoal: #1a1a1a;
-  --cb-graphite: #262626;
-  --cb-slate: #404040;
-  --cb-muted: #6b7280;
+  --cb-charcoal: #212121;
+  --cb-graphite: #2F2F2F;
+  --cb-slate: #434343;
+  --cb-muted: #8F8F8F;
 
-  --cb-page-bg: #f5f5f7;
+  --cb-page-bg: #F5F5F5;
   --cb-card-bg: #ffffff;
-  --cb-border: #e5e7eb;
+  --cb-border: #E0E0E0;
   --cb-border-strong: #d1d5db;
 
-  --cb-text: #111827;
-  --cb-text-soft: #4b5563;
+  --cb-text: #212121;
+  --cb-text-soft: #505050;
 
-  --cb-success: #059669;
-  --cb-success-bg: #d1fae5;
+  --cb-success: #41AE3B;
+  --cb-success-bg: #ECF7EB;
   --cb-warning: #d97706;
   --cb-warning-bg: #fef3c7;
-  --cb-info: #0369a1;
+  --cb-info: #3370C5;
 
   --cb-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
   --cb-shadow: 0 4px 12px rgba(10, 10, 10, 0.08);
@@ -37,7 +38,7 @@
   --cb-radius: 8px;
   --cb-radius-lg: 12px;
 
-  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-family: 'Roboto Flex', Roboto, 'Segoe UI', system-ui, sans-serif;
   color: var(--cb-text);
 }
 

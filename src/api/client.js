@@ -117,6 +117,7 @@ export const ventasApi = {
   vendedores: () => api('/ventas/vendedores'),
   obtener: (id) => api(`/ventas/${id}`),
   crear: (payload) => api('/ventas', json('POST', payload)),
+  cotizar: (items) => api('/ventas/cotizar', json('POST', { items })),
   anular: (id, motivo, autorizacion_token) => api(`/ventas/${id}/anular`, json('POST', { motivo, autorizacion_token })),
 }
 
@@ -133,4 +134,19 @@ export const cajaApi = {
 export const reportesApi = {
   resumen: (params) => api(`/reportes/resumen${qs(params)}`),
   inventario: () => api('/reportes/inventario'),
+}
+
+export const promocionesApi = {
+  tipos: () => api('/promociones/tipos'),
+  listar: (params) => api(`/promociones${qs(params)}`),
+  obtener: (id) => api(`/promociones/${id}`),
+  crear: (payload) => api('/promociones', json('POST', payload)),
+  editar: (id, payload) => api(`/promociones/${id}`, json('PUT', payload)),
+  cambiarEstado: (id, activar) => api(`/promociones/${id}/${activar ? 'activar' : 'desactivar'}`, json('POST', {})),
+  productos: (params) => api(`/promociones/productos${qs(params)}`),
+}
+
+export const pedidosOnlineApi = {
+  listar: (params) => api(`/pedidos-online${qs(params)}`),
+  accion: (id, accion, payload) => api(`/pedidos-online/${id}/${accion}`, json('POST', payload || {})),
 }

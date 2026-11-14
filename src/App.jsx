@@ -19,6 +19,8 @@ import HistorialVentas from './features/ventas/HistorialVentas'
 import MiCuenta from './features/cuenta/MiCuenta'
 import MiCaja from './features/caja/MiCaja'
 import ControlCajas from './features/caja/ControlCajas'
+import Promociones from './features/tienda/Promociones'
+import PedidosOnline from './features/tienda/PedidosOnline'
 
 /** Página de inicio según el rol activo. */
 function inicioDeRol(rol) {
@@ -145,6 +147,8 @@ export default function App() {
         {puede('productos.ver') && <Route path="/productos" element={<Productos permisos={permisos} />} />}
         {puede('productos.ver') && <Route path="/catalogo/sku" element={<GuiaSku />} />}
         {puede('stock.actualizar') && <Route path="/almacen" element={<GestionStock />} />}
+        {puede('promociones.gestionar') && <Route path="/promociones" element={<Promociones />} />}
+        {puede('pedidos.gestionar') && <Route path="/pedidos-online" element={<PedidosOnline />} />}
         <Route path="/mi-cuenta" element={<MiCuenta sesion={sesion} onUsuario={actualizarUsuario} />} />
         <Route path="*" element={<Navigate to={inicioDeRol(rol)} replace />} />
       </Routes>

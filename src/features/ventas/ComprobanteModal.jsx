@@ -74,6 +74,7 @@ export default function ComprobanteModal({ venta, onClose, recienCreada = false,
                 <td>
                   {d.producto_nombre}
                   <div className="ticket-sub">SKU {d.producto_sku || d.producto_codigo} · {money(d.precio_unitario)} c/u</div>
+                  {d.descuento > 0 && <div className="ticket-sub">Promo {d.promocion_nombre}: - {money(d.descuento)}</div>}
                 </td>
                 <td className="num">{money(d.subtotal)}</td>
               </tr>

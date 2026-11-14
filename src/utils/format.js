@@ -28,6 +28,10 @@ export const METODOS_PAGO = {
   plin: 'Plin',
 }
 export const METODO_LABEL = { ...METODOS_PAGO, mixto: 'Pago mixto' }
+/** Medios con los que se cobra en caja (QR quedó solo para ventas antiguas). */
+export const METODOS_COBRO = ['efectivo', 'tarjeta', 'yape', 'plin']
+/** Marcas de tarjeta que acepta Coolbox. */
+export const MARCAS_TARJETA = ['Visa', 'Mastercard', 'American Express', 'Diners Club']
 export const metodoLabel = (m) => METODO_LABEL[m] || m
 
 /** Ayuda corta que ve el cajero al elegir el medio de pago. */
