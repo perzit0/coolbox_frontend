@@ -5,7 +5,7 @@ import { ColumnChart } from '../../components/Charts'
 import Icon from '../../components/Icon'
 import ProductoImagen from '../../components/ProductoImagen'
 import SkuCode from '../../components/SkuCode'
-import { fechaHora, hoyLima, METODOS_PAGO, money, plural } from '../../utils/format'
+import { fechaHora, hoyLima, metodoLabel, money, plural } from '../../utils/format'
 
 export default function DashboardAdmin({ sesion }) {
   const [datos, setDatos] = useState(null)
@@ -128,7 +128,7 @@ export default function DashboardAdmin({ sesion }) {
                   <tr key={v.id} className={v.estado === 'anulada' ? 'row-muted' : ''}>
                     <td className="mono"><strong>{v.codigo}</strong></td>
                     <td>{fechaHora(v.fecha)}</td>
-                    <td>{METODOS_PAGO[v.metodo_pago] || v.metodo_pago}</td>
+                    <td>{metodoLabel(v.metodo_pago)}</td>
                     <td className="num">{v.estado === 'anulada' ? <span className="badge badge-red">Anulada</span> : money(v.total)}</td>
                   </tr>
                 ))}

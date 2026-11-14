@@ -140,7 +140,7 @@ export default function App() {
         {puede('caja.operar') && <Route path="/caja" element={<MiCaja />} />}
         {puede('caja.supervisar') && <Route path="/cajas" element={<ControlCajas />} />}
         {puede('ventas.crear') && <Route path="/ventas/nueva" element={<NuevaVenta sesion={sesion} />} />}
-        {puede('ventas.ver') && <Route path="/ventas" element={<HistorialVentas puedeAnular={puede('ventas.anular')} />} />}
+        {puede('ventas.ver') && <Route path="/ventas" element={<HistorialVentas puedeAnular={puede('ventas.anular')} esCajero={puede('caja.operar')} usuarioId={sesion.usuario.id} />} />}
         {puede('reportes.ver') && <Route path="/reportes" element={<Reportes />} />}
         {puede('productos.ver') && <Route path="/productos" element={<Productos permisos={permisos} />} />}
         {puede('productos.ver') && <Route path="/catalogo/sku" element={<GuiaSku />} />}

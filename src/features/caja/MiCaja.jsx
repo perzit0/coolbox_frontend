@@ -1,17 +1,22 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { cajaApi } from '../../api/client'
+import { useAutorizacion } from '../../components/Autorizacion'
 import { useFeedback } from '../../components/Feedback'
 import Icon from '../../components/Icon'
-import { fechaHora, hoyLima, METODOS_PAGO, money, plural } from '../../utils/format'
+import Modal from '../../components/Modal'
+import { fechaHora, hoyLima, metodoLabel, money, plural } from '../../utils/format'
 import CierreCajaModal from './CierreCajaModal'
 import ReporteCierreModal from './ReporteCierreModal'
 
 const FONDOS_SUGERIDOS = [100, 200, 300, 500]
 
-/** Turno de caja del vendedor: apertura con fondo inicial y resumen en vivo. */
+/** Turno de caja del cajero: apertura con fondo inicial, resumen en vivo,
+ * retiros parciales con PIN del supervisor y cierre con arqueo ciego. */
 export default function MiCaja() {
   const fb = useFeedback()
+  const autorizar = useAutorizacion()
+  const [retirando, setRetirando] = useState(false)
   const [caja, setCaja] = useState(undefined) // undefined = cargando, null = sin caja
   const [fondo, setFondo] = useState('')
   const [error, setError] = useState('')
@@ -99,7 +104,19 @@ export default function MiCaja() {
     )
   }
 
+  async function retirar(monto, nota) {
+    const ok = await autorizar({ accion: 'RETIRO_EFECTIVO', monto, descripcion: 'El supervisor cuenta y se lleva el efectivo frente al cajero.' })
+    if (!ok) return
+    try {
+      const res = await cajaApi.retiro(monto, nota || ok.motivoTexto, ok.token)
+      setCaja(res.caja)
+      setRetirando(false)
+      fb.ok(`Retiro de ${money(monto)} registrado, autorizado por ${ok.supervisor_nombre}.`)
+    } catch (err) { fb.error(err.detail || 'No fue posible registrar el retiro.') }
+  }
+
   const r = caja.resumen
+  const ciego = r.efectivo_esperado == null
   const vencida = new Date(caja.fecha_apertura).toLocaleDateString('en-CA', { timeZone: 'America/Lima' }) < hoyLima()
   return (
     <>
@@ -110,6 +127,7 @@ export default function MiCaja() {
         </div>
         <div className="actions-inline">
           <button type="button" className="btn btn-outline" onClick={cargar}><Icon name="refresh" /> Actualizar</button>
+          <button type="button" className="btn btn-outline" onClick={() => setRetirando(true)}><Icon name="arrowOut" /> Retiro de efectivo</button>
           <button type="button" className="btn btn-dark" onClick={() => setCerrando(true)}><Icon name="lock" /> Cerrar caja</button>
           {!vencida && <Link to="/ventas/nueva" className="btn btn-primary"><Icon name="cart" /> Nueva venta</Link>}
         </div>
@@ -121,16 +139,31 @@ export default function MiCaja() {
         </div>
       )}
 
+      {r.requiere_retiro && (
+        <div className="alert alert-info">
+          La gaveta superó el límite de {money(r.limite_efectivo)} en efectivo. Llama al supervisor para un retiro parcial.
+        </div>
+      )}
+
       <div className="stats-grid">
         <div className="stat-card">
           <p className="stat-label">Vendido en el turno</p>
           <p className="stat-value">{money(r.total_vendido)}</p>
-          <p className="stat-hint">{plural(r.ventas_completadas, 'venta')}{r.ventas_anuladas ? ` · ${plural(r.ventas_anuladas, 'anulada')}` : ''}</p>
+          <p className="stat-hint">{plural(r.ventas_completadas, 'venta')}{r.ventas_anuladas ? ` · ${plural(r.ventas_anuladas, 'anulada')}` : ''}{r.total_descuentos ? ` · descuentos ${money(r.total_descuentos)}` : ''}</p>
         </div>
         <div className="stat-card stat-black">
           <p className="stat-label">Efectivo esperado en caja</p>
-          <p className="stat-value">{money(r.efectivo_esperado)}</p>
-          <p className="stat-hint">Fondo {money(caja.monto_apertura)} + ventas en efectivo {money(r.efectivo_ventas)}</p>
+          {ciego ? (
+            <>
+              <p className="stat-value">Cuadre ciego</p>
+              <p className="stat-hint">Lo verás al cerrar, después de contar tu gaveta. Fondo inicial {money(caja.monto_apertura)}{r.retiros ? ` · retiros ${money(r.retiros)}` : ''}.</p>
+            </>
+          ) : (
+            <>
+              <p className="stat-value">{money(r.efectivo_esperado)}</p>
+              <p className="stat-hint">Fondo {money(caja.monto_apertura)} + efectivo {money(r.efectivo_ventas)}{r.retiros ? ` - retiros ${money(r.retiros)}` : ''}</p>
+            </>
+          )}
         </div>
       </div>
 
@@ -141,13 +174,30 @@ export default function MiCaja() {
             <thead><tr><th>Método</th><th className="num">Ventas</th><th className="num">Total</th></tr></thead>
             <tbody>
               {r.por_metodo.map((m) => (
-                <tr key={m.metodo}><td>{METODOS_PAGO[m.metodo] || m.metodo}</td><td className="num">{m.ventas}</td><td className="num">{money(m.total)}</td></tr>
+                <tr key={m.metodo}><td>{metodoLabel(m.metodo)}</td><td className="num">{m.ventas}</td>
+                  <td className="num">{m.total == null ? <span className="muted">Se ve al cerrar</span> : money(m.total)}</td></tr>
               ))}
             </tbody>
           </table>
         )}
       </div>
+
+      {caja.retiros?.length > 0 && (
+        <div className="card">
+          <div className="card-header"><h3 className="card-title">Retiros parciales</h3></div>
+          <table className="data-table">
+            <thead><tr><th>Hora</th><th>Autorizó</th><th>Motivo</th><th className="num">Monto</th></tr></thead>
+            <tbody>
+              {caja.retiros.map((m) => (
+                <tr key={m.id}><td>{fechaHora(m.fecha)}</td><td>{m.supervisor_nombre}</td><td>{m.motivo}</td><td className="num">{money(m.monto)}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
       {historialCard}
+
+      {retirando && <RetiroModal onClose={() => setRetirando(false)} onConfirmar={retirar} />}
 
       {cerrando && (
         <CierreCajaModal caja={caja} onClose={() => setCerrando(false)}
@@ -160,6 +210,35 @@ export default function MiCaja() {
       )}
       {reporteModal}
     </>
+  )
+}
+
+function RetiroModal({ onClose, onConfirmar }) {
+  const [monto, setMonto] = useState('')
+  const [nota, setNota] = useState('')
+  const valido = Number(monto) > 0
+  return (
+    <Modal size="sm" as="form" onClose={onClose} titulo="Retiro parcial de efectivo"
+      subtitulo="El supervisor retira efectivo de la gaveta (sangría) para no acumular dinero en caja."
+      onSubmit={(e) => { e.preventDefault(); if (valido) onConfirmar(Number(monto), nota.trim()) }}
+      footer={(
+        <>
+          <button type="button" className="btn btn-ghost" onClick={onClose}>Cancelar</button>
+          <button className="btn btn-primary" disabled={!valido}><Icon name="shield" /> Continuar con el PIN</button>
+        </>
+      )}>
+      <div className="form-group">
+        <label>Monto a retirar (S/)</label>
+        <input className="form-control input-lg" type="number" min="0" step="10" autoFocus value={monto} onChange={(e) => setMonto(e.target.value)} />
+        <div className="chip-row">
+          {[200, 500, 1000].map((m) => <button key={m} type="button" className="chip" onClick={() => setMonto(String(m))}>{money(m)}</button>)}
+        </div>
+      </div>
+      <div className="form-group" style={{ marginBottom: 0 }}>
+        <label>Nota (opcional)</label>
+        <input className="form-control" maxLength={200} value={nota} onChange={(e) => setNota(e.target.value)} placeholder="Ej. Sobre N° 12 a bóveda" />
+      </div>
+    </Modal>
   )
 }
 

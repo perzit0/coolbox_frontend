@@ -19,11 +19,36 @@ export function hoyLima(offsetDias = 0) {
   return d.toLocaleDateString('en-CA', { timeZone: 'America/Lima' })
 }
 
+/** Medios de pago de una caja real en Lima. "mixto" = venta pagada con varios medios. */
 export const METODOS_PAGO = {
   efectivo: 'Efectivo',
-  tarjeta: 'Tarjeta',
+  tarjeta: 'Tarjeta (POS)',
+  qr: 'QR (POS)',
   yape: 'Yape',
   plin: 'Plin',
+}
+export const METODO_LABEL = { ...METODOS_PAGO, mixto: 'Pago mixto' }
+export const metodoLabel = (m) => METODO_LABEL[m] || m
+
+/** Ayuda corta que ve el cajero al elegir el medio de pago. */
+export const AYUDA_METODO = {
+  efectivo: 'Cuenta el dinero frente al cliente y entrega el vuelto.',
+  tarjeta: 'Cobra en el POS y copia el N° de operación (REF) del voucher.',
+  qr: 'Genera el QR en el POS (Yape, Plin u otra billetera) y copia el N° de operación del voucher.',
+  yape: 'Pago al Yape de la tienda: verifica que llegó y copia el N° de operación de la constancia.',
+  plin: 'Pago al Plin de la tienda: verifica que llegó y copia el N° de operación de la constancia.',
+}
+
+export const PROVEEDORES_POS = ['OpenPay', 'Niubiz', 'Izipay', 'Culqi', 'Otro']
+
+export const ACCIONES_AUTORIZACION = {
+  ANULAR_ITEM: 'Retirar producto del carrito',
+  VACIAR_CARRITO: 'Cancelar venta en curso',
+  DESCUENTO: 'Descuento mayor al permitido',
+  ANULAR_VENTA: 'Anular venta cobrada',
+  RETIRO_EFECTIVO: 'Retiro parcial de efectivo',
+  CIERRE_DIFERENCIA: 'Cierre de caja con diferencia',
+  REIMPRESION: 'Reimpresión de comprobante',
 }
 
 export const TIPOS_MOVIMIENTO = {

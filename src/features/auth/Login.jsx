@@ -5,8 +5,8 @@ import { PasswordInput } from '../../components/PasswordFields'
 
 const DEMO = [
   { email: 'admin@coolbox.com.pe', password: 'Admin123!', rol: 'Administrador' },
-  { email: 'jperezl@coolbox.com.pe', password: 'Vendedor123!', rol: 'Vendedor' },
-  { email: 'mtorresr@coolbox.com.pe', password: 'Supervisor123!', rol: 'Supervisor de Ventas' },
+  { email: 'jperezl@coolbox.com.pe', password: 'Vendedor123!', rol: 'Cajero' },
+  { email: 'mtorresr@coolbox.com.pe', password: 'Supervisor123!', rol: 'Supervisor de Caja (PIN 482615)' },
 ]
 
 /** Ingreso único para todo el personal. El rol (incluido Administrador)
@@ -56,7 +56,7 @@ export default function Login({ onSuccess }) {
       <section className="login-form-side">
         <div className="login-form-card">
           <h2>Iniciar sesión</h2>
-          <p className="subtitle">Administradores, vendedores y supervisores de ventas.</p>
+          <p className="subtitle">Administradores, cajeros y supervisores de caja.</p>
 
           <form onSubmit={submit} noValidate>
             {error && <div className="alert alert-error">{error}</div>}

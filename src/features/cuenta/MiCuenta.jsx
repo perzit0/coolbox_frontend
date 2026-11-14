@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { authApi } from '../../api/client'
 import { useFeedback } from '../../components/Feedback'
 import { NuevaPasswordFields, PasswordInput, passwordValida } from '../../components/PasswordFields'
+import Icon from '../../components/Icon'
 import { fecha, fechaHora } from '../../utils/format'
 
 /** Panel "Mi cuenta": datos personales y cambio de contraseña propio. */
@@ -94,6 +95,64 @@ export default function MiCuenta({ sesion, onUsuario }) {
           </button>
         </form>
       </div>
+
+      {usuario.puede_autorizar && <PinCard usuario={usuario} onUsuario={onUsuario} />}
     </>
+  )
+}
+
+/** PIN de autorización: el supervisor lo escribe en la caja del cajero para aprobar
+ * anulaciones, descuentos, retiros y cierres con diferencia, sin que el cajero salga de su sesión. */
+function PinCard({ usuario, onUsuario }) {
+  const fb = useFeedback()
+  const [password, setPassword] = useState('')
+  const [pin, setPin] = useState('')
+  const [pin2, setPin2] = useState('')
+  const [guardando, setGuardando] = useState(false)
+  const valido = password && /^\d{6}$/.test(pin) && pin === pin2
+
+  async function guardar(e) {
+    e.preventDefault()
+    if (!valido) return
+    setGuardando(true)
+    try {
+      const r = await authApi.configurarPin(password, pin)
+      onUsuario(r.usuario)
+      setPassword(''); setPin(''); setPin2('')
+      fb.ok('PIN de autorización actualizado.')
+    } catch (err) { fb.error(err.detail) } finally { setGuardando(false) }
+  }
+
+  return (
+    <form className="card" style={{ marginTop: '1.25rem', maxWidth: 560 }} onSubmit={guardar}>
+      <div className="card-header">
+        <h3 className="card-title"><Icon name="shield" /> PIN de autorización</h3>
+        <span className={`badge ${usuario.tiene_pin ? 'badge-green' : 'badge-yellow'}`}>{usuario.tiene_pin ? 'Configurado' : 'Sin configurar'}</span>
+      </div>
+      <p className="muted small" style={{ marginTop: 0 }}>
+        Lo escribes en la caja del cajero para autorizar anulaciones, descuentos, retiros de efectivo, reimpresiones
+        y cierres con diferencia. Es personal: no lo compartas. Tras 3 intentos fallidos se bloquea 5 minutos.
+      </p>
+      <div className="form-row">
+        <div className="form-group">
+          <label>Nuevo PIN (6 dígitos)</label>
+          <input className="form-control pin-input" type="password" inputMode="numeric" maxLength={6} autoComplete="off"
+            value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))} />
+        </div>
+        <div className="form-group">
+          <label>Repite el PIN</label>
+          <input className="form-control pin-input" type="password" inputMode="numeric" maxLength={6} autoComplete="off"
+            value={pin2} onChange={(e) => setPin2(e.target.value.replace(/\D/g, ''))} />
+          {pin2 && pin !== pin2 && <div className="form-error">Los PIN no coinciden.</div>}
+        </div>
+      </div>
+      <div className="form-group">
+        <label>Tu contraseña (para confirmar)</label>
+        <PasswordInput value={password} onChange={setPassword} autoComplete="current-password" />
+      </div>
+      <button className="btn btn-primary" disabled={!valido || guardando}>
+        {guardando ? <span className="spinner" /> : usuario.tiene_pin ? 'Cambiar PIN' : 'Crear PIN'}
+      </button>
+    </form>
   )
 }

@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
-import { cajaApi } from '../../api/client'
+import { autorizacionesApi, cajaApi } from '../../api/client'
+import { MOTIVOS } from '../../components/Autorizacion'
 import { useFeedback } from '../../components/Feedback'
 import Icon from '../../components/Icon'
-import { fechaHora, hoyLima, money } from '../../utils/format'
+import { ACCIONES_AUTORIZACION, fechaHora, hoyLima, money } from '../../utils/format'
 import { DiferenciaBadge } from './MiCaja'
-import ReporteCierreModal from './ReporteCierreModal'
+import ReporteCierreModal, { ResultadoBadge } from './ReporteCierreModal'
 
 /** Control de cajas del Supervisor: turnos abiertos y cerrados, arqueos y diferencias. */
 export default function ControlCajas() {
@@ -13,9 +14,12 @@ export default function ControlCajas() {
   const [datos, setDatos] = useState(null)
   const [cargando, setCargando] = useState(true)
   const [detalle, setDetalle] = useState(null)
+  const [autorizaciones, setAutorizaciones] = useState([])
 
   const cargar = () => {
     setCargando(true)
+    autorizacionesApi.bitacora({ desde: filtros.desde, hasta: filtros.hasta })
+      .then((r) => setAutorizaciones(r.autorizaciones)).catch(() => setAutorizaciones([]))
     cajaApi.control(filtros)
       .then(setDatos)
       .catch((err) => fb.error(err.detail))
@@ -32,7 +36,7 @@ export default function ControlCajas() {
       <div className="page-header">
         <div>
           <h1 className="page-title">Control de cajas</h1>
-          <p className="page-subtitle">Revisa los turnos de los vendedores, sus arqueos y las diferencias de efectivo.</p>
+          <p className="page-subtitle">Revisa los turnos de los cajeros, sus arqueos, retiros y las autorizaciones dadas con PIN.</p>
         </div>
         <button type="button" className="btn btn-outline" onClick={cargar}><Icon name="refresh" /> Actualizar</button>
       </div>
@@ -47,7 +51,7 @@ export default function ControlCajas() {
           </select>
         </div>
         <div className="form-group compact">
-          <label>Vendedor</label>
+          <label>Cajero</label>
           <select className="form-control" value={filtros.usuario_id} onChange={set('usuario_id')}>
             <option value="">Todos</option>
             {(datos?.vendedores || []).map((v) => <option key={v.id} value={v.id}>{v.nombre}</option>)}
@@ -62,6 +66,11 @@ export default function ControlCajas() {
             <p className="stat-value">{money(ind.total_vendido)}</p>
             <p className="stat-hint">{ind.abiertas} abierta(s) · {ind.cerradas} cerrada(s)</p>
           </div>
+          <div className="stat-card">
+            <p className="stat-label">Autorizaciones con PIN</p>
+            <p className="stat-value">{autorizaciones.filter((a) => a.resultado === 'aprobada').length}</p>
+            <p className="stat-hint">{autorizaciones.filter((a) => a.resultado !== 'aprobada').length} intento(s) rechazado(s)</p>
+          </div>
           <div className="stat-card stat-black">
             <p className="stat-label">Cajas con diferencia</p>
             <p className="stat-value">{ind.con_diferencia}</p>
@@ -74,7 +83,7 @@ export default function ControlCajas() {
         <table className="data-table">
           <thead>
             <tr>
-              <th>Caja</th><th>Vendedor</th><th>Turno</th>
+              <th>Caja</th><th>Cajero</th><th>Turno</th>
               <th className="num">Ventas</th><th className="num">Vendido</th><th>Arqueo</th><th />
             </tr>
           </thead>
@@ -100,6 +109,28 @@ export default function ControlCajas() {
             ))}
           </tbody>
         </table>
+      </div>
+
+      <div className="card" style={{ marginTop: '1.25rem' }}>
+        <div className="card-header"><h3 className="card-title">Bitácora de autorizaciones</h3></div>
+        {autorizaciones.length === 0 ? <div className="empty-state">Sin autorizaciones en el periodo.</div> : (
+          <div className="table-wrapper flat"><table className="data-table">
+            <thead><tr><th>Hora</th><th>Cajero</th><th>Acción</th><th>Supervisor</th><th>Motivo</th><th className="num">Monto</th><th>Resultado</th></tr></thead>
+            <tbody>
+              {autorizaciones.map((a) => (
+                <tr key={a.id}>
+                  <td className="nowrap">{fechaHora(a.fecha)}</td>
+                  <td>{a.solicitante_nombre}</td>
+                  <td>{ACCIONES_AUTORIZACION[a.accion] || a.accion}{(a.detalle || a.venta_codigo) && <div className="cell-sub">{a.detalle || a.venta_codigo}</div>}</td>
+                  <td>{a.supervisor_nombre}</td>
+                  <td>{MOTIVOS[a.motivo] || a.motivo}{a.comentario && <div className="cell-sub">{a.comentario}</div>}</td>
+                  <td className="num">{a.monto != null ? money(a.monto) : '—'}</td>
+                  <td><ResultadoBadge resultado={a.resultado} /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table></div>
+        )}
       </div>
 
       {detalle && <ReporteCierreModal caja={detalle} onClose={() => setDetalle(null)} />}

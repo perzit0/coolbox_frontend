@@ -402,3 +402,40 @@ a.btn, .btn { text-decoration: none; }
 .caja-bloqueo { padding: 2rem 2rem 2.25rem; }
 .caja-bloqueo .card-title { margin: 0 0 .4rem; }
 .caja-bloqueo .page-subtitle { margin: 0 0 1.25rem; }
+
+/* ---------- Autorización con PIN de supervisor ---------- */
+.aut-accion { display: flex; gap: .75rem; align-items: flex-start; padding: .75rem .9rem; border: 1px solid var(--cb-border-strong); border-left: 4px solid var(--cb-red); border-radius: 8px; margin-bottom: 1rem; background: #fafafa; }
+.aut-accion .icon { color: var(--cb-red); margin-top: 2px; }
+.aut-monto { font-weight: 800; font-size: 1.05rem; margin-top: .2rem; font-variant-numeric: tabular-nums; }
+.pin-input { font-size: 1.4rem; letter-spacing: .5em; text-align: center; font-weight: 700; }
+.modal-backdrop + .modal-backdrop { background: rgba(0, 0, 0, .35); }
+
+/* ---------- Venta: carrito, descuento y pagos ---------- */
+.link-btn { border: 0; background: none; padding: 0; color: var(--cb-red); font-size: .75rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: .2rem; }
+.link-btn:hover { text-decoration: underline; }
+.cart-item-sub { display: flex; flex-direction: column; align-items: flex-end; gap: .15rem; }
+.qty-val { min-width: 34px; text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; }
+.compact-row { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
+.descuento-row { display: flex; gap: .35rem; align-items: center; }
+.descuento-row .form-control { flex: 1; }
+.pagos { display: flex; flex-direction: column; gap: .5rem; }
+.pagos-head { display: flex; justify-content: space-between; align-items: center; }
+.pagos-head label { font-weight: 700; font-size: .85rem; display: inline-flex; gap: .4rem; align-items: center; }
+.pago-linea { display: flex; flex-direction: column; gap: .4rem; padding: .6rem; border: 1px solid var(--cb-border-strong); border-radius: 8px; background: #fff; }
+.pago-monto { display: flex; gap: .35rem; align-items: center; }
+.pago-monto .form-control { flex: 1; }
+.form-help.pos { color: var(--cb-success); font-weight: 700; }
+.espera-card { margin-bottom: 1rem; }
+
+/* ---------- Cierre: conciliación ---------- */
+.conciliacion { margin-top: 1.25rem; }
+.input-num { max-width: 9rem; margin-left: auto; text-align: right; }
+
+/* ---------- Ticket ---------- */
+.ticket-copia { margin-top: .3rem; font-weight: 800; letter-spacing: .1em; border: 1px solid #000; display: inline-block; padding: 0 .4rem; }
+.ticket-totals > .ticket-pago { display: block; }
+.ticket-pago > div:first-child { display: flex; justify-content: space-between; gap: .5rem; }
+.ticket-pago .ticket-sub { text-align: left; }
+@media (max-width: 640px) { .compact-row { grid-template-columns: 1fr; } }
+.card-title { display: inline-flex; align-items: center; gap: .4rem; }
+.pago-etq { font-size: .72rem; font-weight: 700; color: var(--cb-muted); min-width: 3.6rem; text-transform: uppercase; letter-spacing: .04em; }

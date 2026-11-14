@@ -4,7 +4,7 @@ import { BarList, ColumnChart } from '../../components/Charts'
 import Icon from '../../components/Icon'
 import ProductoImagen from '../../components/ProductoImagen'
 import SkuCode from '../../components/SkuCode'
-import { hoyLima, METODOS_PAGO, money, plural } from '../../utils/format'
+import { hoyLima, metodoLabel, money, plural } from '../../utils/format'
 
 const RANGOS = [
   { id: 'hoy', label: 'Hoy', desde: () => hoyLima() },
@@ -91,23 +91,23 @@ export default function Reportes() {
             </div>
             <div className="card">
               <div className="card-header"><h3 className="card-title">Por método de pago</h3></div>
-              <BarList datos={rep.por_metodo.map((m) => ({ ...m, metodo: METODOS_PAGO[m.metodo] || m.metodo }))}
+              <BarList datos={rep.por_metodo.map((m) => ({ ...m, metodo: metodoLabel(m.metodo) }))}
                 etiqueta="metodo" detalle={(d) => plural(d.ventas, 'venta')} />
             </div>
             <div className="card">
-              <div className="card-header"><h3 className="card-title">Por vendedor</h3></div>
+              <div className="card-header"><h3 className="card-title">Por cajero</h3></div>
               <BarList datos={rep.por_vendedor} etiqueta="nombre" detalle={(d) => plural(d.ventas, 'venta')} />
             </div>
           </div>
 
           <div className="card">
             <div className="card-header">
-              <h3 className="card-title">Cuadre de cajas por vendedor</h3>
+              <h3 className="card-title">Cuadre de cajas por cajero</h3>
               <span className="cell-sub">{rep.indicadores.cajas} caja(s) · {rep.indicadores.cajas_con_diferencia} con diferencia</span>
             </div>
             {(rep.cuadre_cajas || []).length === 0 ? <div className="empty-state">No se abrieron cajas en el rango.</div> : (
               <table className="data-table compact">
-                <thead><tr><th>Vendedor</th><th className="num">Cajas</th><th className="num">Cuadradas</th><th className="num">Abiertas</th><th className="num">Sobrante</th><th className="num">Faltante</th></tr></thead>
+                <thead><tr><th>Cajero</th><th className="num">Cajas</th><th className="num">Cuadradas</th><th className="num">Abiertas</th><th className="num">Sobrante</th><th className="num">Faltante</th></tr></thead>
                 <tbody>
                   {rep.cuadre_cajas.map((c) => (
                     <tr key={c.usuario_id}>

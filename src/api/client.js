@@ -1,11 +1,12 @@
 const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/$/, '')
 
 export class ApiError extends Error {
-  constructor(message, status, detail) {
+  constructor(message, status, detail, body = {}) {
     super(detail || message)
     this.code = message
     this.status = status
     this.detail = detail
+    this.body = body
   }
 }
 
@@ -45,7 +46,7 @@ export async function api(path, options = {}) {
     if (code === 'cambio_password_requerido') {
       window.dispatchEvent(new CustomEvent('coolbox:cambio-password'))
     }
-    throw new ApiError(code, response.status, body.detail || 'No fue posible completar la solicitud.')
+    throw new ApiError(code, response.status, body.detail || 'No fue posible completar la solicitud.', body)
   }
   return body
 }
@@ -70,6 +71,13 @@ export const authApi = {
   cambiarPassword: (password_actual, password_nueva) =>
     api('/auth/cambiar-password', json('POST', { password_actual, password_nueva })),
   actualizarPerfil: (payload) => api('/auth/perfil', json('PATCH', payload)),
+  configurarPin: (password_actual, pin) => api('/auth/pin', json('PUT', { password_actual, pin })),
+}
+
+export const autorizacionesApi = {
+  supervisores: () => api('/autorizaciones/supervisores'),
+  solicitar: (payload) => api('/autorizaciones', json('POST', payload)),
+  bitacora: (params) => api(`/autorizaciones${qs(params)}`),
 }
 
 export const rolesApi = {
@@ -109,13 +117,14 @@ export const ventasApi = {
   vendedores: () => api('/ventas/vendedores'),
   obtener: (id) => api(`/ventas/${id}`),
   crear: (payload) => api('/ventas', json('POST', payload)),
-  anular: (id, motivo) => api(`/ventas/${id}/anular`, json('POST', { motivo })),
+  anular: (id, motivo, autorizacion_token) => api(`/ventas/${id}/anular`, json('POST', { motivo, autorizacion_token })),
 }
 
 export const cajaApi = {
   miCaja: () => api('/cajas/mi-caja'),
   abrir: (monto_apertura) => api('/cajas/abrir', json('POST', { monto_apertura })),
-  cerrar: (conteo, observacion) => api('/cajas/cerrar', json('POST', { conteo, observacion })),
+  cerrar: (payload) => api('/cajas/cerrar', json('POST', payload)),
+  retiro: (monto, motivo, autorizacion_token) => api('/cajas/retiro', json('POST', { monto, motivo, autorizacion_token })),
   misCajas: () => api('/cajas/mis-cajas'),
   obtener: (id) => api(`/cajas/${id}`),
   control: (params) => api(`/cajas${qs(params)}`),
