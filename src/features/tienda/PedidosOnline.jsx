@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
-import { pedidosOnlineApi } from '../../api/client'
+import { abrirArchivo, pedidosOnlineApi } from '../../api/client'
 import { useFeedback } from '../../components/Feedback'
 import Icon from '../../components/Icon'
 import Modal from '../../components/Modal'
-import { fechaHora, money } from '../../utils/format'
+import { ESTADO_SUNAT, fechaHora, money } from '../../utils/format'
+
+const TIPO_COMPROBANTE = { boleta: 'Boleta', nota_credito: 'Nota de crédito' }
 
 const ESTADOS = {
   pendiente_pago: ['Pendiente de pago', 'badge-orange'], pagado: ['Pagado', 'badge-blue'],
@@ -33,6 +35,13 @@ export default function PedidosOnline() {
       textoConfirmar: 'Cancelar pedido', peligro: true, pedirMotivo: true, etiquetaMotivo: 'Motivo', minMotivo: 5 })
     if (motivo) accion(p, 'cancelar', { motivo })
   }
+  const reintentar = async (p, tipo) => {
+    try {
+      const r = await pedidosOnlineApi.reintentarComprobante(p.id, tipo)
+      setDetalle((d) => ({ ...r.pedido, entregar: d?.entregar })); cargar()
+    } catch (e) { fb.error(e.detail) }
+  }
+  const abrir = (p, c, formato) => abrirArchivo(`/pedidos-online/${p.id}/comprobante/${c.tipo}/${formato}`).catch((e) => fb.error(e.detail))
   const c = datos?.conteo || {}
 
   return (
@@ -103,6 +112,26 @@ export default function PedidosOnline() {
             ))}
           </ul>
           <div className="small">Subtotal {money(detalle.subtotal)} · Promociones -{money(detalle.descuento)}{detalle.descuento_cupon > 0 ? ` · Cupón ${detalle.cupon} -${money(detalle.descuento_cupon)}` : ''} · <b>Total {money(detalle.total)}</b></div>
+          {(detalle.comprobantes || []).length > 0 && (
+            <div className="sunat-box">
+              {detalle.comprobantes.map((cp) => (
+                <div key={cp.id} className="sunat-row">
+                  <div>
+                    <strong>{TIPO_COMPROBANTE[cp.tipo]}</strong> {cp.numero || <span className="muted">sin número</span>}
+                    <div className="cell-sub">{cp.sunat_mensaje || ''}</div>
+                  </div>
+                  <div className="actions-inline nowrap">
+                    <span className={`badge ${(ESTADO_SUNAT[cp.estado_sunat] || {}).clase || 'badge-gray'}`}>{(ESTADO_SUNAT[cp.estado_sunat] || {}).label || cp.estado_sunat}</span>
+                    {cp.tiene_pdf && <button type="button" className="btn btn-outline btn-sm" onClick={() => abrir(detalle, cp, 'pdf')}><Icon name="file" size={15} /> PDF</button>}
+                    {cp.tiene_xml && <button type="button" className="btn btn-ghost btn-sm" onClick={() => abrir(detalle, cp, 'xml')}>XML</button>}
+                    {['pendiente', 'error'].includes(cp.estado_sunat) && (
+                      <button type="button" className="btn btn-outline btn-sm" onClick={() => reintentar(detalle, cp.tipo)}><Icon name="refresh" size={15} /> Reintentar</button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
           <p className="small muted">Recojo en {detalle.sede?.nombre} ({detalle.sede?.direccion}). {detalle.entregado_por ? `Entregado por ${detalle.entregado_por} el ${fechaHora(detalle.fecha_entrega)}.` : ''}{detalle.motivo_cancelacion ? ` Motivo de cancelación: ${detalle.motivo_cancelacion}` : ''}</p>
           {detalle.entregar && (
             <div className="form-group">

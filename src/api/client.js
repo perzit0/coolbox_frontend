@@ -151,6 +151,7 @@ export async function abrirArchivo(path) {
 
 export const cajaApi = {
   miCaja: () => api('/cajas/mi-caja'),
+  denominaciones: () => api('/cajas/denominaciones'),
   abrir: (monto_apertura) => api('/cajas/abrir', json('POST', { monto_apertura })),
   cerrar: (payload) => api('/cajas/cerrar', json('POST', payload)),
   retiro: (monto, motivo, autorizacion_token) => api('/cajas/retiro', json('POST', { monto, motivo, autorizacion_token })),
@@ -177,4 +178,5 @@ export const promocionesApi = {
 export const pedidosOnlineApi = {
   listar: (params) => api(`/pedidos-online${qs(params)}`),
   accion: (id, accion, payload) => api(`/pedidos-online/${id}/${accion}`, json('POST', payload || {})),
+  reintentarComprobante: (id, tipo) => api(`/pedidos-online/${id}/comprobante/${tipo}`, json('POST', {})),
 }

@@ -1,4 +1,8 @@
 import { useEffect, useState } from 'react'
+import { imagenAncho } from '../utils/format'
+
+/** Ancho en px de la foto según el tamaño del recuadro (se pide el doble para pantallas nítidas). */
+const ANCHO = { xs: 96, sm: 128, md: 320, lg: 480 }
 
 /* Ilustraciones de línea por familia: se muestran cuando el producto aún no
  * tiene foto o si la imagen no carga. */
@@ -68,18 +72,20 @@ const ICONO_GENERICO = (
 )
 
 export default function ProductoImagen({ producto, size = 'md' }) {
-  const [fallo, setFallo] = useState(false)
+  const [intento, setIntento] = useState(0) // 0 reducida, 1 original, 2 sin foto
   const url = producto?.imagen_url || producto?.producto_imagen_url
   const familia = producto?.familia || producto?.categoria
 
   // Si cambia la imagen (p. ej. en el formulario), volver a intentar cargarla
-  useEffect(() => { setFallo(false) }, [url])
+  useEffect(() => { setIntento(0) }, [url])
+  const reducida = intento === 0 ? imagenAncho(url, ANCHO[size] || 320) : url
 
   const clase = `prod-img prod-img-${size}`
-  if (url && !fallo) {
+  if (url && intento < 2) {
     return (
       <div className={clase}>
-        <img src={url} alt={producto?.nombre || 'Producto'} loading="lazy" referrerPolicy="no-referrer" onError={() => setFallo(true)} />
+        <img src={reducida} alt={producto?.nombre || 'Producto'} loading="lazy" decoding="async" referrerPolicy="no-referrer"
+          onError={() => setIntento((n) => (n === 0 && reducida !== url ? 1 : 2))} />
       </div>
     )
   }

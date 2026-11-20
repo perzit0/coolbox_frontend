@@ -2,7 +2,6 @@ import Icon from '../../components/Icon'
 import Modal from '../../components/Modal'
 import { ACCIONES_AUTORIZACION, fechaHora, metodoLabel, money } from '../../utils/format'
 import { MOTIVOS } from '../../components/Autorizacion'
-import { BILLETES, MONEDAS } from './CierreCajaModal'
 
 /** Reporte de cierre (arqueo) con formato de ticket de 80 mm al imprimir. */
 export default function ReporteCierreModal({ caja, onClose, recienCerrada = false }) {
@@ -61,7 +60,7 @@ export default function ReporteCierreModal({ caja, onClose, recienCerrada = fals
           <table className="ticket-items">
             <thead><tr><th>Denominación</th><th className="num">Cant.</th><th className="num">Importe</th></tr></thead>
             <tbody>
-              {[...BILLETES, ...MONEDAS].filter((d) => conteo[d]).map((d) => (
+              {Object.keys(conteo).filter((d) => conteo[d]).sort((a, b) => Number(b) - Number(a)).map((d) => (
                 <tr key={d}><td>{money(d)}</td><td className="num">{conteo[d]}</td><td className="num">{money(Number(d) * conteo[d])}</td></tr>
               ))}
             </tbody>

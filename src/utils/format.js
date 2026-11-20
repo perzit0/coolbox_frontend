@@ -4,6 +4,13 @@ const soles = new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN
 /** Zona horaria del negocio (VITE_ZONA_HORARIA; Perú por defecto). */
 export const ZONA_HORARIA = import.meta.env.VITE_ZONA_HORARIA || 'America/Lima'
 
+/** Fotos del CDN de VTEX (coolbox.pe): se pide la copia del tamaño mostrado ("/ids/<id>-<ancho>-<alto>/"). */
+const VTEX = /(\/arquivos\/ids\/\d+)(-\d+-\d+)?\//
+export function imagenAncho(url, ancho) {
+  if (!url || !ancho || !VTEX.test(url)) return url
+  return url.replace(VTEX, `$1-${ancho}-${ancho}/`)
+}
+
 export const money = (n) => soles.format(Number(n || 0)).replace('PEN', 'S/').replace(/ /g, ' ')
 
 export const fecha = (iso) =>
@@ -72,6 +79,7 @@ export const ESTADO_SUNAT = {
   aceptado: { label: 'Aceptado SUNAT', clase: 'badge-green' },
   pendiente: { label: 'Pendiente SUNAT', clase: 'badge-yellow' },
   error: { label: 'Error SUNAT', clase: 'badge-red' },
+  anulado: { label: 'No emitido (anulado)', clase: 'badge-gray' },
 }
 
 export const ESTADO_STOCK = {

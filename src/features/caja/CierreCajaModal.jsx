@@ -1,12 +1,15 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { cajaApi } from '../../api/client'
 import { useAutorizacion } from '../../components/Autorizacion'
 import Icon from '../../components/Icon'
 import Modal from '../../components/Modal'
 import { metodoLabel, money } from '../../utils/format'
 
-export const BILLETES = ['200', '100', '50', '20', '10']
-export const MONEDAS = ['5', '2', '1', '0.50', '0.20', '0.10']
+/** Las denominaciones vienen del backend (GET /cajas/denominaciones): billetes desde S/ 10. */
+export const separarDenominaciones = (lista) => ({
+  billetes: lista.filter((d) => Number(d) >= 10),
+  monedas: lista.filter((d) => Number(d) < 10),
+})
 
 const FUENTE = {
   tarjeta: 'Cierre del POS (tarjetas)',
@@ -25,6 +28,9 @@ const FUENTE = {
 export default function CierreCajaModal({ caja, onClose, onCerrada }) {
   const autorizar = useAutorizacion()
   const [conteo, setConteo] = useState({})
+  const [denominaciones, setDenominaciones] = useState([])
+  useEffect(() => { cajaApi.denominaciones().then((r) => setDenominaciones(r.denominaciones)).catch(() => {}) }, [])
+  const { billetes, monedas } = separarDenominaciones(denominaciones)
   const [declarado, setDeclarado] = useState({})
   const [observacion, setObservacion] = useState('')
   const [arqueo, setArqueo] = useState(null) // detalle devuelto por la API cuando hay diferencia
@@ -106,11 +112,11 @@ export default function CierreCajaModal({ caja, onClose, onCerrada }) {
       <div className="arqueo-grid">
         <div>
           <h4 className="arqueo-titulo">Billetes</h4>
-          {BILLETES.map(fila)}
+          {billetes.map(fila)}
         </div>
         <div>
           <h4 className="arqueo-titulo">Monedas</h4>
-          {MONEDAS.map(fila)}
+          {monedas.map(fila)}
         </div>
       </div>
 
