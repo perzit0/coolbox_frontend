@@ -13,7 +13,6 @@ import useAnularVenta from './useAnularVenta'
 
 const IGV = 0.18
 const DESCUENTO_MAX_CAJERO = 5 // % que el cajero aplica sin autorización
-const MONTO_BOLETA_CON_DNI = 700 // SUNAT: boletas mayores a S/ 700 identifican al cliente
 const MAX_EN_ESPERA = 5
 const r2 = (n) => Math.round(Number(n || 0) * 100) / 100
 
@@ -149,8 +148,9 @@ export default function NuevaVenta({ sesion }) {
 
   const descuentoRequierePin = totales.pct > DESCUENTO_MAX_CAJERO + 1e-9
   const descuentoCubierto = !descuentoRequierePin || (venta.descuentoToken && totales.descuento <= venta.descuentoAutorizado)
-  const requiereDocumento = totales.total > MONTO_BOLETA_CON_DNI
-  const documentoValido = !clienteDocumento || [8, 9, 11].includes(clienteDocumento.length)
+  // Toda boleta o factura identifica al cliente: nombre y documento son obligatorios.
+  const documentoValido = [8, 9, 11].includes(clienteDocumento.length)
+  const clienteCompleto = clienteNombre.trim() !== '' && documentoValido
 
   // ---------------- Pagos
   const mixto = pagos.length > 1
@@ -181,7 +181,7 @@ export default function NuevaVenta({ sesion }) {
   const efectivoDuplicado = pagos.filter((p) => p.metodo === 'efectivo').length > 1
 
   const puedeCobrar = totales.items.length > 0 && restante === 0 && erroresPago.every((e) => !e) && !efectivoDuplicado
-    && descuentoCubierto && (!requiereDocumento || (clienteDocumento && documentoValido)) && documentoValido
+    && descuentoCubierto && clienteCompleto
 
   async function pedirDescuento() {
     const ok = await autorizar({
@@ -404,19 +404,19 @@ export default function NuevaVenta({ sesion }) {
 
           <div className="form-row compact-row">
             <div className="form-group compact">
-              <label>Cliente {requiereDocumento ? '' : '(opcional)'}</label>
+              <label>Cliente <span className="neg">(obligatorio)</span></label>
               <input className="form-control" placeholder="Nombre" maxLength={180} value={clienteNombre} onChange={(e) => set({ clienteNombre: e.target.value })} />
             </div>
             <div className="form-group compact">
-              <label>DNI / CE / RUC {requiereDocumento ? <span className="neg">(obligatorio)</span> : '(opcional)'}</label>
+              <label>DNI / CE / RUC <span className="neg">(obligatorio)</span></label>
               <input className="form-control" inputMode="numeric" maxLength={11} value={clienteDocumento}
                 onChange={(e) => set({ clienteDocumento: e.target.value.replace(/\D/g, '') })} />
             </div>
           </div>
-          {requiereDocumento && !clienteDocumento && (
-            <div className="form-help">Boleta mayor a {money(MONTO_BOLETA_CON_DNI)}: SUNAT exige identificar al cliente.</div>
+          {!clienteDocumento && (
+            <div className="form-help">Toda boleta o factura se emite con los datos del cliente.</div>
           )}
-          {!documentoValido && <div className="form-error">El documento debe tener 8 (DNI), 9 (CE) u 11 (RUC) dígitos.</div>}
+          {clienteDocumento && !documentoValido && <div className="form-error">El documento debe tener 8 (DNI), 9 (CE) u 11 (RUC) dígitos.</div>}
 
           <div className="form-group compact">
             <label>Descuento (S/) <span className="muted">· hasta {DESCUENTO_MAX_CAJERO}% sin autorización</span></label>
