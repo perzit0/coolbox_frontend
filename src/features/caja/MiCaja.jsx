@@ -149,7 +149,7 @@ export default function MiCaja() {
         <div className="stat-card">
           <p className="stat-label">Vendido en el turno</p>
           <p className="stat-value">{money(r.total_vendido)}</p>
-          <p className="stat-hint">{plural(r.ventas_completadas, 'venta')}{r.ventas_anuladas ? ` · ${plural(r.ventas_anuladas, 'anulada')}` : ''}{r.total_descuentos ? ` · descuentos ${money(r.total_descuentos)}` : ''}</p>
+          <p className="stat-hint">{plural(r.ventas_completadas, 'venta')}{r.ventas_anuladas ? ` · ${plural(r.ventas_anuladas, 'anulada')}` : ''}{r.total_descuentos ? ` · descuentos ${money(r.total_descuentos)}` : ''}{r.devoluciones ? ` · ${plural(r.devoluciones, 'devolución', 'devoluciones')} ${money(r.total_devuelto)}` : ''}</p>
         </div>
         <div className="stat-card stat-black">
           <p className="stat-label">Efectivo esperado en caja</p>
@@ -161,7 +161,7 @@ export default function MiCaja() {
           ) : (
             <>
               <p className="stat-value">{money(r.efectivo_esperado)}</p>
-              <p className="stat-hint">Fondo {money(caja.monto_apertura)} + efectivo {money(r.efectivo_ventas)}{r.retiros ? ` - retiros ${money(r.retiros)}` : ''}</p>
+              <p className="stat-hint">Fondo {money(caja.monto_apertura)} + efectivo {money(r.efectivo_ventas)}{r.devuelto_efectivo ? ` - devoluciones ${money(r.devuelto_efectivo)}` : ''}{r.retiros ? ` - retiros ${money(r.retiros)}` : ''}</p>
             </>
           )}
         </div>
@@ -182,6 +182,20 @@ export default function MiCaja() {
         )}
       </div>
 
+      {caja.devoluciones?.length > 0 && (
+        <div className="card">
+          <div className="card-header"><h3 className="card-title">Devoluciones atendidas</h3></div>
+          <table className="data-table">
+            <thead><tr><th>Hora</th><th>Devolución</th><th>Venta</th><th>Nota de crédito</th><th>Reembolso</th><th className="num">Monto</th></tr></thead>
+            <tbody>
+              {caja.devoluciones.map((d) => (
+                <tr key={d.id}><td>{fechaHora(d.fecha)}</td><td className="mono">{d.codigo}</td><td className="mono">{d.venta_codigo}</td>
+                  <td className="mono">{d.nota_credito || '—'}</td><td>{metodoLabel(d.metodo_reembolso)}</td><td className="num">{money(d.total)}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
       {caja.retiros?.length > 0 && (
         <div className="card">
           <div className="card-header"><h3 className="card-title">Retiros parciales</h3></div>

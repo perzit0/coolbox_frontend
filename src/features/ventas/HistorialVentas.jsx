@@ -5,6 +5,7 @@ import Icon from '../../components/Icon'
 import Pagination from '../../components/Pagination'
 import { fechaHora, hoyLima, METODO_LABEL, metodoLabel, money } from '../../utils/format'
 import ComprobanteModal from './ComprobanteModal'
+import DevolucionModal from './DevolucionModal'
 import useAnularVenta from './useAnularVenta'
 
 const FILTROS = { q: '', desde: '', hasta: '', estado: '', metodo_pago: '', usuario_id: '', page: 1 }
@@ -21,6 +22,7 @@ export default function HistorialVentas({ puedeAnular = false, esCajero = false,
   const [vendedores, setVendedores] = useState([])
   const [loading, setLoading] = useState(true)
   const [detalle, setDetalle] = useState(null)
+  const [devolviendo, setDevolviendo] = useState(null)
 
   const set = (k, v) => setFiltros((f) => ({ ...f, [k]: v, page: k === 'page' ? v : 1 }))
 
@@ -38,8 +40,22 @@ export default function HistorialVentas({ puedeAnular = false, esCajero = false,
     try { setDetalle((await ventasApi.obtener(id)).venta) } catch (err) { fb.error(err.detail) }
   }
 
-  const puedeAnularVenta = (v) => v.estado === 'completada' && v.caja_estado !== 'cerrada'
+  const puedeAnularVenta = (v) => v.estado === 'completada' && v.caja_estado !== 'cerrada' && !(v.monto_devuelto > 0)
     && (puedeAnular || (esCajero && v.usuario_id === usuarioId && v.caja_estado === 'abierta'))
+
+  // Devolución (después de la compra): en caja, con PIN, sobre una venta con boleta o factura aceptada.
+  const puedeDevolver = (v) => esCajero && v.estado === 'completada' && v.estado_sunat === 'aceptado'
+    && v.estado_devolucion !== 'total'
+
+  const abrirDevolucion = async (v) => {
+    try { setDevolviendo(v.detalles ? v : (await ventasApi.obtener(v.id)).venta) } catch (err) { fb.error(err.detail) }
+  }
+
+  const devuelta = (venta) => {
+    setDevolviendo(null)
+    if (detalle?.id === venta.id) setDetalle(venta)
+    cargar()
+  }
 
   const anular = async (v) => {
     const anulada = await anularVenta(v)
@@ -123,6 +139,10 @@ export default function HistorialVentas({ puedeAnular = false, esCajero = false,
                 <td className="num"><strong>{money(v.total)}</strong></td>
                 <td>
                   <span className={v.estado === 'completada' ? 'badge badge-green' : 'badge badge-red'}>{v.estado}</span>
+                  {v.estado_devolucion && v.estado_devolucion !== 'ninguna' && (
+                    <div className="cell-sub"><span className="badge badge-orange">Devolución {v.estado_devolucion}</span> {money(v.monto_devuelto)}</div>
+                  )}
+                  {v.comprobante && <div className="cell-sub mono">{v.comprobante}</div>}
                   {v.estado === 'anulada' && v.anulada_por && (
                     <div className="cell-sub">por {v.anulada_por}{v.autorizada_por ? ` · aut. ${v.autorizada_por}` : ''}</div>
                   )}
@@ -130,6 +150,9 @@ export default function HistorialVentas({ puedeAnular = false, esCajero = false,
                 <td>
                   <div className="actions-inline nowrap">
                     <button className="btn btn-outline btn-sm" onClick={() => verDetalle(v.id)}><Icon name="eye" size={15} /> Ver</button>
+                    {puedeDevolver(v) && (
+                      <button className="btn btn-outline btn-sm" onClick={() => abrirDevolucion(v)}><Icon name="undo" size={15} /> Devolver</button>
+                    )}
                     {puedeAnularVenta(v) && (
                       <button className="btn btn-danger btn-sm" onClick={() => anular(v)}>
                         {!puedeAnular && <Icon name="shield" size={13} />} Anular
@@ -146,8 +169,11 @@ export default function HistorialVentas({ puedeAnular = false, esCajero = false,
 
       {detalle && (
         <ComprobanteModal venta={detalle} onClose={() => setDetalle(null)} reimpresionConPin={!puedeAnular && esCajero}
-          onAnular={puedeAnularVenta(detalle) ? () => anular(detalle) : undefined} />
+          onAnular={puedeAnularVenta(detalle) ? () => anular(detalle) : undefined}
+          onDevolver={puedeDevolver(detalle) ? () => abrirDevolucion(detalle) : undefined}
+          puedeReintentar={esCajero} onActualizar={(v) => { setDetalle(v); cargar() }} />
       )}
+      {devolviendo && <DevolucionModal venta={devolviendo} onClose={() => setDevolviendo(null)} onDone={devuelta} />}
     </>
   )
 }

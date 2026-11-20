@@ -119,6 +119,32 @@ export const ventasApi = {
   crear: (payload) => api('/ventas', json('POST', payload)),
   cotizar: (items) => api('/ventas/cotizar', json('POST', { items })),
   anular: (id, motivo, autorizacion_token) => api(`/ventas/${id}/anular`, json('POST', { motivo, autorizacion_token })),
+  reintentarComprobante: (id) => api(`/ventas/${id}/comprobante`, json('POST', {})),
+  devolver: (id, payload) => api(`/ventas/${id}/devoluciones`, json('POST', payload)),
+}
+
+export const devolucionesApi = {
+  reintentarNota: (id) => api(`/devoluciones/${id}/comprobante`, json('POST', {})),
+}
+
+/** Abre en otra pestaña un PDF o XML guardado por el backend (la descarga necesita el token). */
+export async function abrirArchivo(path) {
+  const token = tokenStore.get()
+  const ventana = window.open('', '_blank')
+  try {
+    const r = await fetch(`${API_URL}${path}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+    if (!r.ok) {
+      const body = await r.json().catch(() => ({}))
+      throw new ApiError(body.error || 'error_de_api', r.status, body.detail || 'El archivo no está disponible.')
+    }
+    const url = URL.createObjectURL(await r.blob())
+    if (ventana) ventana.location.href = url
+    else window.location.href = url
+    setTimeout(() => URL.revokeObjectURL(url), 60000)
+  } catch (err) {
+    ventana?.close()
+    throw err
+  }
 }
 
 export const cajaApi = {

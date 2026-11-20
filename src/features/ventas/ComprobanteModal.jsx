@@ -1,16 +1,37 @@
 import { useState } from 'react'
+import { abrirArchivo, devolucionesApi, ventasApi } from '../../api/client'
 import { useAutorizacion } from '../../components/Autorizacion'
+import { useFeedback } from '../../components/Feedback'
 import Icon from '../../components/Icon'
 import Modal from '../../components/Modal'
-import { fechaHora, metodoLabel, money } from '../../utils/format'
+import { ESTADO_SUNAT, fechaHora, metodoLabel, money } from '../../utils/format'
 
 const TIPO_TARJETA = { debito: 'débito', credito: 'crédito' }
 
 /** Comprobante interno de venta, con formato de ticket de 80 mm al imprimir.
  * reimpresionConPin: el cajero solo reimprime una venta pasada con PIN del supervisor
  * (evita entregar copias que se usen para reclamos o devoluciones duplicadas). */
-export default function ComprobanteModal({ venta, onClose, recienCreada = false, onAnular, reimpresionConPin = false }) {
+export default function ComprobanteModal({ venta, onClose, recienCreada = false, onAnular, reimpresionConPin = false,
+  onDevolver, puedeReintentar = false, onActualizar }) {
   const autorizar = useAutorizacion()
+  const fb = useFeedback()
+  const [reintentando, setReintentando] = useState(null)
+
+  async function abrir(path) {
+    try { await abrirArchivo(path) } catch (err) { fb.error(err.detail || 'El archivo no está disponible.') }
+  }
+
+  async function reintentar(clave, accion) {
+    setReintentando(clave)
+    try {
+      await accion()
+      onActualizar?.((await ventasApi.obtener(venta.id)).venta)
+    } catch (err) {
+      fb.error(err.detail || 'No fue posible emitir el comprobante.')
+    } finally {
+      setReintentando(null)
+    }
+  }
   const [copia, setCopia] = useState(false)
   const anulada = venta.estado === 'anulada'
 
@@ -31,6 +52,9 @@ export default function ComprobanteModal({ venta, onClose, recienCreada = false,
       subtitulo={anulada ? 'Venta anulada' : recienCreada ? 'Venta registrada y stock actualizado' : fechaHora(venta.fecha)}
       footer={(
         <>
+          {onDevolver && (
+            <button className="btn btn-outline" onClick={onDevolver}><Icon name="undo" /> Devolver productos</button>
+          )}
           {onAnular && !anulada && (
             <button className="btn btn-danger" onClick={onAnular}>
               <Icon name={reimpresionConPin || recienCreada ? 'shield' : 'ban'} /> Anular venta
@@ -50,6 +74,56 @@ export default function ComprobanteModal({ venta, onClose, recienCreada = false,
           Motivo: {venta.motivo_anulacion || '—'}
         </div>
       )}
+
+      <div className="sunat-box no-print">
+        <div className="sunat-row">
+          <div>
+            <strong>{venta.tipo_comprobante === 'factura' ? 'Factura' : 'Boleta'} electrónica</strong>{' '}
+            {venta.comprobante || <span className="muted">sin número</span>}
+            <div className="cell-sub">{venta.sunat_mensaje || ''}</div>
+          </div>
+          <div className="actions-inline nowrap">
+            <span className={`badge ${(ESTADO_SUNAT[venta.estado_sunat] || {}).clase || 'badge-gray'}`}>
+              {(ESTADO_SUNAT[venta.estado_sunat] || {}).label || venta.estado_sunat}
+            </span>
+            {venta.tiene_pdf && <button type="button" className="btn btn-outline btn-sm" onClick={() => abrir(`/ventas/${venta.id}/comprobante/pdf`)}><Icon name="file" size={15} /> PDF</button>}
+            {venta.tiene_xml && <button type="button" className="btn btn-ghost btn-sm" onClick={() => abrir(`/ventas/${venta.id}/comprobante/xml`)}>XML</button>}
+            {puedeReintentar && venta.estado_sunat !== 'aceptado' && !anulada && (
+              <button type="button" className="btn btn-outline btn-sm" disabled={reintentando === 'venta'}
+                onClick={() => reintentar('venta', () => ventasApi.reintentarComprobante(venta.id))}>
+                <Icon name="refresh" size={15} /> {reintentando === 'venta' ? 'Emitiendo…' : 'Reintentar'}
+              </button>
+            )}
+          </div>
+        </div>
+        {(venta.devoluciones || []).map((d) => (
+          <div key={d.id} className="sunat-row">
+            <div>
+              <strong>Devolución {d.codigo}</strong> · Nota de crédito {d.nota_credito || <span className="muted">sin número</span>}
+              {' '}({d.cod_motivo === '06' ? 'devolución total' : 'devolución por ítem'})
+              <div className="cell-sub">
+                {fechaHora(d.fecha)} · {money(d.total)} por {metodoLabel(d.metodo_reembolso)}{d.nro_operacion ? ` (op. ${d.nro_operacion})` : ''}
+                {' '}· {d.detalles.map((x) => `${x.cantidad} × ${x.producto_nombre}${x.reingresa_stock ? '' : ' (no reingresa)'}`).join(', ')}
+                {d.autorizada_por ? ` · aut. ${d.autorizada_por}` : ''}
+              </div>
+              <div className="cell-sub">Motivo: {d.motivo}</div>
+            </div>
+            <div className="actions-inline nowrap">
+              <span className={`badge ${(ESTADO_SUNAT[d.estado_sunat] || {}).clase || 'badge-gray'}`}>
+                {(ESTADO_SUNAT[d.estado_sunat] || {}).label || d.estado_sunat}
+              </span>
+              {d.tiene_pdf && <button type="button" className="btn btn-outline btn-sm" onClick={() => abrir(`/devoluciones/${d.id}/comprobante/pdf`)}><Icon name="file" size={15} /> PDF</button>}
+              {d.tiene_xml && <button type="button" className="btn btn-ghost btn-sm" onClick={() => abrir(`/devoluciones/${d.id}/comprobante/xml`)}>XML</button>}
+              {puedeReintentar && d.estado_sunat !== 'aceptado' && (
+                <button type="button" className="btn btn-outline btn-sm" disabled={reintentando === d.id}
+                  onClick={() => reintentar(d.id, () => devolucionesApi.reintentarNota(d.id))}>
+                  <Icon name="refresh" size={15} /> {reintentando === d.id ? 'Emitiendo…' : 'Reintentar'}
+                </button>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
 
       <div className="ticket" id="ticket-imprimible">
         <div className="ticket-head">

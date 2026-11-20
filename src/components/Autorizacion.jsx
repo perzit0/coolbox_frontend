@@ -39,6 +39,7 @@ const MOTIVOS_POR_ACCION = {
   RETIRO_EFECTIVO: ['exceso_efectivo', 'otro'],
   CIERRE_DIFERENCIA: ['error_cobro', 'otro'],
   REIMPRESION: ['solicitud_cliente', 'otro'],
+  DEVOLUCION: ['producto_danado', 'cliente_desiste', 'solicitud_cliente', 'otro'],
 }
 
 const AutorizacionContext = createContext(null)

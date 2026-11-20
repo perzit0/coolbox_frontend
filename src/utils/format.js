@@ -53,6 +53,7 @@ export const ACCIONES_AUTORIZACION = {
   RETIRO_EFECTIVO: 'Retiro parcial de efectivo',
   CIERRE_DIFERENCIA: 'Cierre de caja con diferencia',
   REIMPRESION: 'Reimpresión de comprobante',
+  DEVOLUCION: 'Devolución con nota de crédito',
 }
 
 export const TIPOS_MOVIMIENTO = {
@@ -62,6 +63,14 @@ export const TIPOS_MOVIMIENTO = {
   ajuste: { label: 'Ajuste', clase: 'badge-yellow' },
   venta: { label: 'Venta', clase: 'badge-black' },
   anulacion: { label: 'Anulación', clase: 'badge-blue' },
+  devolucion: { label: 'Devolución', clase: 'badge-orange' },
+}
+
+/** Estado del comprobante electrónico ante la SUNAT. */
+export const ESTADO_SUNAT = {
+  aceptado: { label: 'Aceptado SUNAT', clase: 'badge-green' },
+  pendiente: { label: 'Pendiente SUNAT', clase: 'badge-yellow' },
+  error: { label: 'Error SUNAT', clase: 'badge-red' },
 }
 
 export const ESTADO_STOCK = {

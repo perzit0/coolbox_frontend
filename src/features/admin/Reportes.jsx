@@ -60,7 +60,7 @@ export default function Reportes() {
             <div className="stat-card">
               <p className="stat-label">Total vendido</p>
               <p className="stat-value">{money(ind.total_vendido)}</p>
-              <p className="stat-hint">Base {money(ind.base_imponible)} + IGV {money(ind.igv)}</p>
+              <p className="stat-hint">Base {money(ind.base_imponible)} + IGV {money(ind.igv)}{ind.monto_devuelto ? ` · neto de devoluciones ${money(ind.total_neto)}` : ''}</p>
             </div>
             <div className="stat-card">
               <p className="stat-label">Ventas completadas</p>
@@ -75,7 +75,7 @@ export default function Reportes() {
             <div className="stat-card stat-black">
               <p className="stat-label">Anulaciones</p>
               <p className="stat-value">{ind.ventas_anuladas}</p>
-              <p className="stat-hint">{money(ind.monto_anulado)} anulados</p>
+              <p className="stat-hint">{money(ind.monto_anulado)} anulados{ind.devoluciones ? ` · ${ind.devoluciones} devoluciones (${money(ind.monto_devuelto)})` : ''}</p>
             </div>
           </div>
 

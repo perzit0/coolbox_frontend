@@ -44,6 +44,7 @@ export default function ReporteCierreModal({ caja, onClose, recienCerrada = fals
         <div className="ticket-totals">
           {r.total_descuentos > 0 && <div><span>Descuentos</span><span>{money(r.total_descuentos)}</span></div>}
           {r.total_anulado > 0 && <div><span>Anulado</span><span>{money(r.total_anulado)}</span></div>}
+          {r.total_devuelto > 0 && <div><span>Devuelto (notas de crédito)</span><span>{money(r.total_devuelto)}</span></div>}
           <div className="grand"><span>TOTAL VENDIDO</span><span>{money(r.total_vendido)}</span></div>
         </div>
         {caja.conciliacion && Object.keys(caja.conciliacion).length > 0 && (
@@ -69,6 +70,7 @@ export default function ReporteCierreModal({ caja, onClose, recienCerrada = fals
         <div className="ticket-totals">
           <div><span>Fondo inicial</span><span>{money(caja.monto_apertura)}</span></div>
           <div><span>Cobros en efectivo</span><span>{r.efectivo_ventas == null ? '—' : money(r.efectivo_ventas)}</span></div>
+          {r.devuelto_efectivo > 0 && <div><span>Devoluciones en efectivo</span><span>- {money(r.devuelto_efectivo)}</span></div>}
           {r.retiros > 0 && <div><span>Retiros parciales</span><span>- {money(r.retiros)}</span></div>}
           <div><span>Efectivo esperado</span><span>{(caja.efectivo_esperado ?? r.efectivo_esperado) == null ? '—' : money(caja.efectivo_esperado ?? r.efectivo_esperado)}</span></div>
           {caja.efectivo_contado != null && <div><span>Efectivo contado</span><span>{money(caja.efectivo_contado)}</span></div>}

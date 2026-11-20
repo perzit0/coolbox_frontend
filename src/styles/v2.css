@@ -485,3 +485,10 @@ a.btn, .btn { text-decoration: none; }
 .pedido-detalle-items { list-style: none; padding: 0; margin: 0.5rem 0; font-size: 0.85rem; }
 .pedido-detalle-items li { display: flex; justify-content: space-between; gap: 1rem; padding: 0.3rem 0; border-bottom: 1px solid var(--cb-border); }
 .badge-orange { background: #fff1e0; color: #b55d00; }
+
+/* Comprobante electrónico (boleta/factura y notas de crédito) en el detalle de la venta */
+.sunat-box { border: 1px solid var(--cb-border, #e5e7eb); border-radius: 10px; margin-bottom: 14px; overflow: hidden; }
+.sunat-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 14px; }
+.sunat-row > div:first-child { flex: 1; min-width: 0; }
+.sunat-row + .sunat-row { border-top: 1px solid var(--cb-border, #e5e7eb); background: #fafafa; }
+@media (max-width: 640px) { .sunat-row { flex-direction: column; align-items: flex-start; } }

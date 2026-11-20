@@ -548,6 +548,7 @@ export default function NuevaVenta({ sesion }) {
             const anulada = await anularVenta(comprobante)
             if (anulada) { setComprobante(anulada); cargar(); cargarCaja() }
           }}
+          puedeReintentar onActualizar={setComprobante}
           onClose={() => { setComprobante(null); buscador.current?.focus() }} />
       )}
     </>
