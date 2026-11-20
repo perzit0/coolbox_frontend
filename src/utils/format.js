@@ -1,22 +1,25 @@
 const soles = new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN', minimumFractionDigits: 2 })
 
 /** S/ 1,234.50 */
+/** Zona horaria del negocio (VITE_ZONA_HORARIA; Perú por defecto). */
+export const ZONA_HORARIA = import.meta.env.VITE_ZONA_HORARIA || 'America/Lima'
+
 export const money = (n) => soles.format(Number(n || 0)).replace('PEN', 'S/').replace(/ /g, ' ')
 
 export const fecha = (iso) =>
-  iso ? new Date(iso).toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'America/Lima' }) : '—'
+  iso ? new Date(iso).toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: ZONA_HORARIA }) : '—'
 
 export const fechaHora = (iso) =>
   iso
     ? new Date(iso).toLocaleString('es-PE', {
-        day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'America/Lima',
+        day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: ZONA_HORARIA,
       })
     : '—'
 
 /** Fecha de hoy en Lima como AAAA-MM-DD (para inputs type=date). */
 export function hoyLima(offsetDias = 0) {
   const d = new Date(Date.now() + offsetDias * 86400000)
-  return d.toLocaleDateString('en-CA', { timeZone: 'America/Lima' })
+  return d.toLocaleDateString('en-CA', { timeZone: ZONA_HORARIA })
 }
 
 /** Medios de pago de una caja real en Lima. "mixto" = venta pagada con varios medios. */
@@ -31,19 +34,17 @@ export const METODO_LABEL = { ...METODOS_PAGO, mixto: 'Pago mixto' }
 /** Medios con los que se cobra en caja (QR quedó solo para ventas antiguas). */
 export const METODOS_COBRO = ['efectivo', 'tarjeta', 'yape', 'plin']
 /** Marcas de tarjeta que acepta Coolbox. */
-export const MARCAS_TARJETA = ['Visa', 'Mastercard', 'American Express', 'Diners Club']
 export const metodoLabel = (m) => METODO_LABEL[m] || m
 
 /** Ayuda corta que ve el cajero al elegir el medio de pago. */
 export const AYUDA_METODO = {
   efectivo: 'Cuenta el dinero frente al cliente y entrega el vuelto.',
-  tarjeta: 'Cobra en el POS y copia el N° de operación (REF) del voucher.',
+  tarjeta: 'Al cobrar, el POS pedirá insertar, deslizar o acercar la tarjeta.',
   qr: 'Genera el QR en el POS (Yape, Plin u otra billetera) y copia el N° de operación del voucher.',
-  yape: 'Pago al Yape de la tienda: verifica que llegó y copia el N° de operación de la constancia.',
-  plin: 'Pago al Plin de la tienda: verifica que llegó y copia el N° de operación de la constancia.',
+  yape: 'Al cobrar, se mostrará el QR de Yape de la tienda para que el cliente lo escanee.',
+  plin: 'Al cobrar, se mostrará el QR de Plin de la tienda para que el cliente lo escanee.',
 }
 
-export const PROVEEDORES_POS = ['OpenPay', 'Niubiz', 'Izipay', 'Culqi', 'Otro']
 
 export const ACCIONES_AUTORIZACION = {
   ANULAR_ITEM: 'Retirar producto del carrito',

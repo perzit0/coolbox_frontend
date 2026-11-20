@@ -34,7 +34,6 @@ export const MOTIVOS = {
 const MOTIVOS_POR_ACCION = {
   ANULAR_ITEM: ['error_digitacion', 'cliente_desiste', 'producto_danado', 'precio_incorrecto', 'otro'],
   VACIAR_CARRITO: ['cliente_desiste', 'pago_rechazado', 'error_digitacion', 'otro'],
-  DESCUENTO: ['promocion', 'producto_danado', 'precio_incorrecto', 'otro'],
   ANULAR_VENTA: ['cliente_desiste', 'error_cobro', 'pago_rechazado', 'producto_danado', 'error_digitacion', 'otro'],
   RETIRO_EFECTIVO: ['exceso_efectivo', 'otro'],
   CIERRE_DIFERENCIA: ['error_cobro', 'otro'],

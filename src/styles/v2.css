@@ -492,3 +492,17 @@ a.btn, .btn { text-decoration: none; }
 .sunat-row > div:first-child { flex: 1; min-width: 0; }
 .sunat-row + .sunat-row { border-top: 1px solid var(--cb-border, #e5e7eb); background: #fafafa; }
 @media (max-width: 640px) { .sunat-row { flex-direction: column; align-items: flex-start; } }
+
+/* POS de pruebas (tarjeta y QR) */
+.pos-pantalla { display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center; padding: 6px 0; }
+.pos-monto { font-size: 2rem; font-weight: 800; letter-spacing: -0.02em; }
+.pos-instruccion { display: flex; flex-direction: column; align-items: center; gap: 8px; font-weight: 600; color: var(--cb-text, #111); }
+.pos-instruccion .icon { color: var(--cb-red); animation: pos-pulso 1.4s ease-in-out infinite; }
+.pos-lectura { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; border-top: 1px dashed var(--cb-border); padding-top: 12px; }
+.pos-qr { width: 180px; height: 180px; border: 1px solid var(--cb-border); border-radius: 8px; image-rendering: pixelated; }
+.pos-aprobado { display: flex; flex-direction: column; align-items: center; gap: 6px; color: #15803d; }
+.pos-aprobado .icon { background: #dcfce7; border-radius: 50%; padding: 8px; }
+.modal-footer kbd, .btn kbd { font: inherit; font-size: 0.7rem; opacity: 0.7; border: 1px solid currentColor; border-radius: 4px; padding: 0 4px; margin-left: 6px; }
+.cliente-verificado { display: inline-flex; align-items: center; gap: 4px; font-size: 0.75rem; color: #15803d; font-weight: 600; }
+@keyframes pos-pulso { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.08); opacity: 0.7; } }
+.cliente-campos { display: grid; grid-template-columns: 1fr; gap: 0; }

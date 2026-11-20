@@ -1,10 +1,11 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { ventasApi } from '../../api/client'
 import { useAutorizacion } from '../../components/Autorizacion'
 import { useFeedback } from '../../components/Feedback'
 import Icon from '../../components/Icon'
 import Modal from '../../components/Modal'
 import { metodoLabel, money } from '../../utils/format'
+import PosSimulado from './PosSimulado'
 
 const r2 = (n) => Math.round(Number(n || 0) * 100) / 100
 
@@ -22,8 +23,10 @@ export default function DevolucionModal({ venta, onClose, onDone }) {
   const [motivo, setMotivo] = useState('')
   const metodos = useMemo(() => [...new Set((venta.pagos || []).map((p) => p.metodo))], [venta])
   const [metodo, setMetodo] = useState(metodos.includes('efectivo') ? 'efectivo' : metodos[0])
-  const [nroOperacion, setNroOperacion] = useState('')
   const [enviando, setEnviando] = useState(false)
+  const [pos, setPos] = useState(null) // extorno en el POS de pruebas
+  const [config, setConfig] = useState({ pos_proveedor: '', marcas_tarjeta: [] })
+  useEffect(() => { ventasApi.config().then(setConfig).catch(() => {}) }, [])
 
   // Lo cobrado ya incluye promociones y descuento global: el reembolso es proporcional.
   const factor = useMemo(() => {
@@ -38,7 +41,6 @@ export default function DevolucionModal({ venta, onClose, onDone }) {
   const items = lineas.filter((d) => cantidades[d.id] > 0)
   const requiereOperacion = metodo && metodo !== 'efectivo'
   const valido = items.length > 0 && motivo.trim().length >= 10 && metodo
-    && (!requiereOperacion || /^[A-Za-z0-9-]{4,30}$/.test(nroOperacion.trim()))
 
   const setCantidad = (d, valor) => {
     const n = Math.max(0, Math.min(d.disponible, Number.parseInt(valor, 10) || 0))
@@ -53,12 +55,18 @@ export default function DevolucionModal({ venta, onClose, onDone }) {
       descripcion: `Venta ${venta.codigo}: devolver ${money(estimado)} por ${metodoLabel(metodo)} y emitir nota de crédito.`,
     })
     if (!aut) return
+    // Tarjeta, Yape o Plin: el extorno se procesa en el POS de pruebas, que da el N° de operación.
+    let extorno = null
+    if (requiereOperacion) {
+      extorno = await new Promise((resolve) => setPos({ resolve }))
+      if (!extorno) { fb.info('Extorno cancelado: la devolución no se registró.'); return }
+    }
     setEnviando(true)
     try {
       const r = await ventasApi.devolver(venta.id, {
         items: items.map((d) => ({ venta_detalle_id: d.id, cantidad: cantidades[d.id], reingresa_stock: !noReingresa[d.id] })),
         motivo: motivo.trim(), metodo_reembolso: metodo,
-        nro_operacion: requiereOperacion ? nroOperacion.trim() : undefined,
+        nro_operacion: extorno ? extorno.nro_operacion : undefined,
         autorizacion_token: aut.token,
       })
       const dev = r.devolucion
@@ -136,18 +144,16 @@ export default function DevolucionModal({ venta, onClose, onDone }) {
             {metodos.map((m) => <option key={m} value={m}>{metodoLabel(m)}</option>)}
           </select>
         </div>
-        {requiereOperacion && (
-          <div className="form-group compact">
-            <label>N° de operación del extorno</label>
-            <input className="form-control" maxLength={30} value={nroOperacion} onChange={(e) => setNroOperacion(e.target.value)} />
-          </div>
-        )}
       </div>
       <div className="form-help">
         {metodo === 'efectivo' ? 'Entrega el efectivo de tu gaveta; se descuenta del efectivo esperado de tu caja.'
-          : 'Haz el extorno en el POS o la app y copia su N° de operación.'}
+          : 'Tras el PIN se abrirá el POS para procesar el extorno.'}
         {' '}Se emitirá una nota de crédito que modifica el comprobante {venta.comprobante}.
       </div>
+      {pos && (
+        <PosSimulado metodo={metodo} monto={estimado} proveedor={config.pos_proveedor} marcas={config.marcas_tarjeta}
+          onDone={(r) => { pos.resolve(r); setPos(null) }} />
+      )}
     </Modal>
   )
 }

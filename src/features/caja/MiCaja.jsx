@@ -5,7 +5,7 @@ import { useAutorizacion } from '../../components/Autorizacion'
 import { useFeedback } from '../../components/Feedback'
 import Icon from '../../components/Icon'
 import Modal from '../../components/Modal'
-import { fechaHora, hoyLima, metodoLabel, money, plural } from '../../utils/format'
+import { fechaHora, hoyLima, metodoLabel, money, plural, ZONA_HORARIA } from '../../utils/format'
 import CierreCajaModal from './CierreCajaModal'
 import ReporteCierreModal from './ReporteCierreModal'
 
@@ -117,7 +117,7 @@ export default function MiCaja() {
 
   const r = caja.resumen
   const ciego = r.efectivo_esperado == null
-  const vencida = new Date(caja.fecha_apertura).toLocaleDateString('en-CA', { timeZone: 'America/Lima' }) < hoyLima()
+  const vencida = new Date(caja.fecha_apertura).toLocaleDateString('en-CA', { timeZone: ZONA_HORARIA }) < hoyLima()
   return (
     <>
       <div className="page-header">

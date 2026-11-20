@@ -4,7 +4,7 @@ import { useFeedback } from '../../components/Feedback'
 import Icon from '../../components/Icon'
 import Modal from '../../components/Modal'
 import ProductoImagen from '../../components/ProductoImagen'
-import { fechaHora, money } from '../../utils/format'
+import { fechaHora, money, ZONA_HORARIA } from '../../utils/format'
 
 const ESTADOS = {
   vigente: ['Vigente', 'badge-green'], programada: ['Programada', 'badge-blue'],
@@ -15,7 +15,7 @@ const CANAL = { todos: 'Online y cajas', online: 'Solo online', tienda: 'Solo ca
 /** Fecha y hora local (Lima) para un <input type="datetime-local">. */
 function local(d) {
   const x = new Date(d)
-  const lima = new Date(x.toLocaleString('en-US', { timeZone: 'America/Lima' }))
+  const lima = new Date(x.toLocaleString('en-US', { timeZone: ZONA_HORARIA }))
   const p = (n) => String(n).padStart(2, '0')
   return `${lima.getFullYear()}-${p(lima.getMonth() + 1)}-${p(lima.getDate())}T${p(lima.getHours())}:${p(lima.getMinutes())}`
 }

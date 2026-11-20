@@ -3,12 +3,6 @@ import { authApi } from '../../api/client'
 import Icon from '../../components/Icon'
 import { PasswordInput } from '../../components/PasswordFields'
 
-const DEMO = [
-  { email: 'admin@coolbox.com.pe', password: 'Admin123!', rol: 'Administrador' },
-  { email: 'jperezl@coolbox.com.pe', password: 'Vendedor123!', rol: 'Cajero' },
-  { email: 'mtorresr@coolbox.com.pe', password: 'Supervisor123!', rol: 'Supervisor de Caja (PIN 482615)' },
-]
-
 /** Ingreso único para todo el personal. El rol (incluido Administrador)
  * se define después, en la pantalla de selección de rol. */
 export default function Login({ onSuccess }) {
@@ -16,7 +10,6 @@ export default function Login({ onSuccess }) {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [sending, setSending] = useState(false)
-  const [verDemo, setVerDemo] = useState(false)
 
   async function submit(e) {
     e.preventDefault()
@@ -82,20 +75,6 @@ export default function Login({ onSuccess }) {
           <p className="login-help">
             <Icon name="info" size={14} /> ¿Olvidaste tu contraseña? Solicita al administrador que la restablezca.
           </p>
-
-          <div className="demo-credentials">
-            <button type="button" className="demo-toggle" onClick={() => setVerDemo((v) => !v)}>
-              Credenciales de prueba <Icon name={verDemo ? 'chevronLeft' : 'chevronRight'} size={14} />
-            </button>
-            {verDemo && DEMO.map((d) => (
-              <div className="demo-cred-row" key={d.email}>
-                <button type="button" className="demo-clickable" onClick={() => { setEmail(d.email); setPassword(d.password) }}>
-                  {d.email}
-                </button>
-                <span>{d.rol}</span>
-              </div>
-            ))}
-          </div>
         </div>
       </section>
     </div>

@@ -6,18 +6,23 @@ import { useFeedback } from '../../components/Feedback'
 import Icon from '../../components/Icon'
 import ProductoImagen from '../../components/ProductoImagen'
 import SkuCode from '../../components/SkuCode'
-import { AYUDA_METODO, fechaHora, hoyLima, MARCAS_TARJETA, METODOS_COBRO, METODOS_PAGO, money, PROVEEDORES_POS } from '../../utils/format'
+import { AYUDA_METODO, fechaHora, hoyLima, METODOS_COBRO, METODOS_PAGO, money, ZONA_HORARIA } from '../../utils/format'
 import useCatalogo from '../productos/useCatalogo'
 import ComprobanteModal from './ComprobanteModal'
+import PosSimulado from './PosSimulado'
 import useAnularVenta from './useAnularVenta'
 
-const IGV = 0.18
-const DESCUENTO_MAX_CAJERO = 5 // % que el cajero aplica sin autorización
 const MAX_EN_ESPERA = 5
 const r2 = (n) => Math.round(Number(n || 0) * 100) / 100
 
-const pagoNuevo = (metodo = 'efectivo') => ({ metodo, monto: '', monto_recibido: '', proveedor: 'OpenPay', tipo_tarjeta: '', marca_tarjeta: '', nro_operacion: '' })
-const ventaVacia = () => ({ carrito: {}, clienteNombre: '', clienteDocumento: '', descuento: '', descuentoToken: null, descuentoAutorizado: 0, pagos: [pagoNuevo()] })
+/* Los precios los fija la empresa (lista + promociones): en caja no hay descuentos manuales.
+ * Tarjeta, Yape y Plin se cobran en el POS de pruebas, que genera el N° de operación. */
+const pagoNuevo = (metodo = 'efectivo') => ({ metodo, monto: '', monto_recibido: '' })
+const ventaVacia = () => ({ carrito: {}, clienteNombre: '', clienteDocumento: '', clienteFuente: '', pagos: [pagoNuevo()] })
+const limpiarBorrador = (b) => ({
+  ...b,
+  pagos: (b.pagos || [pagoNuevo()]).map((p) => ({ metodo: p.metodo, monto: p.monto || '', monto_recibido: p.monto_recibido || '' })),
+})
 
 /* Almacenamiento local por cajero: borrador de la venta en curso (sobrevive a
  * una recarga o a un corte de red) y ventas en espera. */
@@ -36,7 +41,10 @@ export default function NuevaVenta({ sesion }) {
   const [productos, setProductos] = useState([])
   const [busqueda, setBusqueda] = useState('')
   const [familiaId, setFamiliaId] = useState('')
-  const [venta, setVenta] = useState(() => ({ ...ventaVacia(), ...leer(claveBorrador, {}), descuentoToken: null, descuentoAutorizado: 0 }))
+  const [venta, setVenta] = useState(() => limpiarBorrador({ ...ventaVacia(), ...leer(claveBorrador, {}) }))
+  const [config, setConfig] = useState({ igv: 0.18, marcas_tarjeta: [], pos_proveedor: '', consulta_documento: false })
+  const [pos, setPos] = useState(null) // cobro en curso en el POS de pruebas
+  const [consulta, setConsulta] = useState({ estado: 'idle', mensaje: '' })
   const [enEspera, setEnEspera] = useState(() => leer(claveEspera, []))
   const [verEspera, setVerEspera] = useState(false)
   const [error, setError] = useState('')
@@ -45,7 +53,7 @@ export default function NuevaVenta({ sesion }) {
   const buscador = useRef(null)
   const [caja, setCaja] = useState(undefined) // undefined = cargando, null = sin caja abierta
 
-  const { carrito, clienteNombre, clienteDocumento, descuento, pagos } = venta
+  const { carrito, clienteNombre, clienteDocumento, clienteFuente, pagos } = venta
   const set = (cambios) => setVenta((v) => ({ ...v, ...(typeof cambios === 'function' ? cambios(v) : cambios) }))
 
   useEffect(() => { guardar(claveBorrador, venta) }, [venta, claveBorrador])
@@ -53,6 +61,34 @@ export default function NuevaVenta({ sesion }) {
 
   const cargarCaja = () => cajaApi.miCaja().then((r) => setCaja(r.caja)).catch(() => setCaja(null))
   useEffect(() => { cargarCaja() }, [])
+  useEffect(() => { ventasApi.config().then(setConfig).catch(() => {}) }, [])
+
+  // Con DNI (8) o RUC (11) el nombre se completa solo (RENIEC / SUNAT). CE o sin servicio: a mano.
+  useEffect(() => {
+    if (![8, 11].includes(clienteDocumento.length) || !config.consulta_documento) {
+      setConsulta({ estado: 'idle', mensaje: '' })
+      return undefined
+    }
+    if (clienteFuente) return undefined
+    let vivo = true
+    setConsulta({ estado: 'buscando', mensaje: '' })
+    const t = setTimeout(() => {
+      ventasApi.consultarDocumento(clienteDocumento).then((r) => {
+        if (!vivo) return
+        set({ clienteNombre: r.nombre, clienteFuente: r.fuente })
+        setConsulta({ estado: 'ok', mensaje: '' })
+      }).catch((err) => {
+        if (vivo) setConsulta({ estado: 'error', mensaje: err.detail || 'No se pudo consultar el documento: escribe el nombre.' })
+      })
+    }, 300)
+    return () => { vivo = false; clearTimeout(t) }
+  }, [clienteDocumento, config.consulta_documento]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const cambiarDocumento = (valor) => {
+    const doc = valor.replace(/\D/g, '')
+    // Un nombre traído de RENIEC/SUNAT pertenece a ese documento: si cambia, se vuelve a consultar.
+    set((v) => (doc === v.clienteDocumento ? {} : { clienteDocumento: doc, ...(v.clienteFuente ? { clienteNombre: '', clienteFuente: '' } : {}) }))
+  }
 
   async function cargar() {
     try {
@@ -137,17 +173,12 @@ export default function NuevaVenta({ sesion }) {
     })
     const regular = r2(items.reduce((acc, it) => acc + it.regular, 0))
     const descPromos = r2(items.reduce((acc, it) => acc + it.ahorro, 0))
-    const bruto = r2(regular - descPromos)
-    const desc = Math.min(r2(descuento), bruto)
-    const total = r2(bruto - desc)
-    const base = r2(total / (1 + IGV))
+    const total = r2(regular - descPromos)
+    const base = r2(total / (1 + Number(config.igv)))
     const unidades = items.reduce((a, it) => a + it.cantidad, 0)
-    const pct = bruto ? (desc / bruto) * 100 : 0
-    return { regular, descPromos, bruto, descuento: desc, pct, total, base, igv: r2(total - base), items, unidades }
-  }, [carrito, descuento, cotizacion])
+    return { regular, descPromos, total, base, igv: r2(total - base), items, unidades }
+  }, [carrito, cotizacion, config.igv])
 
-  const descuentoRequierePin = totales.pct > DESCUENTO_MAX_CAJERO + 1e-9
-  const descuentoCubierto = !descuentoRequierePin || (venta.descuentoToken && totales.descuento <= venta.descuentoAutorizado)
   // Toda boleta o factura identifica al cliente: nombre y documento son obligatorios.
   const documentoValido = [8, 9, 11].includes(clienteDocumento.length)
   const clienteCompleto = clienteNombre.trim() !== '' && documentoValido
@@ -169,53 +200,47 @@ export default function NuevaVenta({ sesion }) {
   const erroresPago = pagos.map((p) => {
     const monto = montoPago(p)
     if (mixto && monto <= 0) return 'Indica el monto.'
-    if (p.metodo === 'efectivo') {
-      if (p.monto_recibido !== '' && Number(p.monto_recibido) < monto) return 'El efectivo recibido no alcanza.'
-      return null
-    }
-    if (!/^[A-Za-z0-9-]{4,30}$/.test(p.nro_operacion.trim())) return 'Falta el N° de operación.'
-    if (p.metodo === 'tarjeta' && !p.marca_tarjeta) return 'Indica la marca de la tarjeta.'
-    if (p.metodo === 'tarjeta' && !p.tipo_tarjeta) return 'Indica débito o crédito.'
+    if (p.metodo === 'efectivo' && p.monto_recibido !== '' && Number(p.monto_recibido) < monto) return 'El efectivo recibido no alcanza.'
     return null
   })
   const efectivoDuplicado = pagos.filter((p) => p.metodo === 'efectivo').length > 1
 
   const puedeCobrar = totales.items.length > 0 && restante === 0 && erroresPago.every((e) => !e) && !efectivoDuplicado
-    && descuentoCubierto && clienteCompleto
+    && clienteCompleto
 
-  async function pedirDescuento() {
-    const ok = await autorizar({
-      accion: 'DESCUENTO', monto: totales.descuento,
-      descripcion: `${totales.pct.toFixed(1)}% sobre ${money(totales.bruto)} (el cajero puede hasta ${DESCUENTO_MAX_CAJERO}%)`,
-    })
-    if (ok) set({ descuentoToken: ok.token, descuentoAutorizado: totales.descuento })
-  }
+  /** Abre el POS de pruebas para un pago y espera "Se realizó el pago" o "Cancelar". */
+  const cobrarEnPos = (pago) => new Promise((resolve) => setPos({ ...pago, resolve }))
 
   async function registrar() {
     setError('')
     if (!puedeCobrar) return
-    const resumenPagos = pagos.map((p) => `${METODOS_PAGO[p.metodo]} ${money(montoPago(p))}`).join(' + ')
-    const ok = await fb.confirmar({
-      titulo: 'Confirmar cobro',
-      mensaje: `Venta por ${money(totales.total)} (${totales.unidades} unidad${totales.unidades === 1 ? '' : 'es'}). Pago: ${resumenPagos}.`,
-      textoConfirmar: 'Registrar venta',
-    })
-    if (!ok) return
+    const electronicos = pagos.filter((p) => p.metodo !== 'efectivo')
+    if (electronicos.length === 0) {
+      const ok = await fb.confirmar({
+        titulo: 'Confirmar cobro',
+        mensaje: `Venta por ${money(totales.total)} (${totales.unidades} unidad${totales.unidades === 1 ? '' : 'es'}) en efectivo.`,
+        textoConfirmar: 'Registrar venta',
+      })
+      if (!ok) return
+    }
+    // Cada pago con tarjeta, Yape o Plin pasa por el POS; si uno se cancela, la venta no se registra.
+    const cobros = []
+    for (const p of pagos) {
+      if (p.metodo === 'efectivo') { cobros.push({}); continue }
+      const r = await cobrarEnPos({ metodo: p.metodo, monto: montoPago(p) })
+      if (!r) { fb.info('Pago cancelado: la venta no se registró.'); return }
+      cobros.push(r)
+    }
     setEnviando(true)
     try {
       const r = await ventasApi.crear({
-        cliente_nombre: clienteNombre || null,
+        cliente_nombre: clienteNombre.trim() || null,
         cliente_documento: clienteDocumento || null,
-        descuento: totales.descuento || null,
-        autorizacion_token: descuentoRequierePin ? venta.descuentoToken : null,
-        pagos: pagos.map((p) => ({
+        pagos: pagos.map((p, i) => ({
           metodo: p.metodo,
           monto: montoPago(p),
           monto_recibido: p.metodo === 'efectivo' && p.monto_recibido !== '' ? Number(p.monto_recibido) : null,
-          proveedor: ['tarjeta', 'qr'].includes(p.metodo) ? p.proveedor : null,
-          tipo_tarjeta: p.metodo === 'tarjeta' ? p.tipo_tarjeta : null,
-          marca_tarjeta: p.metodo === 'tarjeta' ? p.marca_tarjeta : null,
-          nro_operacion: p.metodo === 'efectivo' ? null : p.nro_operacion.trim(),
+          ...cobros[i],
         })),
         items: totales.items.map((it) => ({ producto_id: it.producto.id, cantidad: it.cantidad })),
       })
@@ -224,7 +249,6 @@ export default function NuevaVenta({ sesion }) {
       cargar(); cargarCaja()
     } catch (err) {
       setError(err.detail || 'No fue posible registrar la venta.')
-      if (['autorizacion_invalida', 'autorizacion_vencida', 'autorizacion_requerida'].includes(err.code)) set({ descuentoToken: null, descuentoAutorizado: 0 })
       if (err.code === 'caja_cerrada' || err.code === 'caja_vencida') cargarCaja()
       cargar()
     } finally { setEnviando(false) }
@@ -234,15 +258,14 @@ export default function NuevaVenta({ sesion }) {
   function ponerEnEspera() {
     if (totales.items.length === 0) return
     if (enEspera.length >= MAX_EN_ESPERA) { fb.error(`Máximo ${MAX_EN_ESPERA} ventas en espera. Retoma o cancela alguna.`); return }
-    const { descuentoToken, ...resto } = venta // la autorización de descuento no se guarda: vence en segundos
-    setEnEspera((l) => [...l, { id: Date.now(), fecha: new Date().toISOString(), total: totales.total, unidades: totales.unidades, venta: { ...resto, descuentoAutorizado: 0 } }])
+    setEnEspera((l) => [...l, { id: Date.now(), fecha: new Date().toISOString(), total: totales.total, unidades: totales.unidades, venta }])
     setVenta(ventaVacia())
     fb.info('Venta puesta en espera. Atiende al siguiente cliente.')
     buscador.current?.focus()
   }
   function retomar(item) {
     if (totales.items.length > 0) { fb.error('Cobra o pon en espera la venta actual antes de retomar otra.'); return }
-    setVenta({ ...ventaVacia(), ...item.venta })
+    setVenta(limpiarBorrador({ ...ventaVacia(), ...item.venta }))
     setEnEspera((l) => l.filter((x) => x.id !== item.id))
     setVerEspera(false)
   }
@@ -254,7 +277,7 @@ export default function NuevaVenta({ sesion }) {
   if (caja === undefined) return <div className="loading-page"><span className="spinner spinner-dark" /> Verificando tu caja…</div>
 
   // Reglas de negocio: sin caja abierta (o con una caja de un día anterior) no se registran ventas
-  const vencida = caja && new Date(caja.fecha_apertura).toLocaleDateString('en-CA', { timeZone: 'America/Lima' }) < hoyLima()
+  const vencida = caja && new Date(caja.fecha_apertura).toLocaleDateString('en-CA', { timeZone: ZONA_HORARIA }) < hoyLima()
   if (caja === null || vencida) {
     return (
       <div className="card caja-bloqueo">
@@ -402,40 +425,26 @@ export default function NuevaVenta({ sesion }) {
           </div>
           {totales.items.length > 0 && <div className="form-help">Restar o quitar un producto ya registrado requiere el PIN del supervisor.</div>}
 
-          <div className="form-row compact-row">
-            <div className="form-group compact">
-              <label>Cliente <span className="neg">(obligatorio)</span></label>
-              <input className="form-control" placeholder="Nombre" maxLength={180} value={clienteNombre} onChange={(e) => set({ clienteNombre: e.target.value })} />
-            </div>
+          <div className="cliente-campos">
             <div className="form-group compact">
               <label>DNI / CE / RUC <span className="neg">(obligatorio)</span></label>
               <input className="form-control" inputMode="numeric" maxLength={11} value={clienteDocumento}
-                onChange={(e) => set({ clienteDocumento: e.target.value.replace(/\D/g, '') })} />
+                onChange={(e) => cambiarDocumento(e.target.value)} placeholder="Documento del cliente" />
+            </div>
+            <div className="form-group compact">
+              <label>
+                Cliente {clienteFuente
+                  ? <span className="cliente-verificado"><Icon name="check" size={12} /> {clienteFuente}</span>
+                  : <span className="neg">(obligatorio)</span>}
+              </label>
+              <input className="form-control" maxLength={180} value={clienteNombre} readOnly={Boolean(clienteFuente)}
+                placeholder={consulta.estado === 'buscando' ? 'Consultando…' : 'Nombre o razón social'}
+                onChange={(e) => set({ clienteNombre: e.target.value })} />
             </div>
           </div>
-          {!clienteDocumento && (
-            <div className="form-help">Toda boleta o factura se emite con los datos del cliente.</div>
-          )}
+          {!clienteDocumento && <div className="form-help">Con DNI o RUC el nombre se completa solo. Toda boleta o factura lleva los datos del cliente.</div>}
           {clienteDocumento && !documentoValido && <div className="form-error">El documento debe tener 8 (DNI), 9 (CE) u 11 (RUC) dígitos.</div>}
-
-          <div className="form-group compact">
-            <label>Descuento (S/) <span className="muted">· hasta {DESCUENTO_MAX_CAJERO}% sin autorización</span></label>
-            <div className="descuento-row">
-              <input className="form-control" type="number" min="0" step="0.10" placeholder="0.00" value={descuento}
-                onChange={(e) => set({ descuento: e.target.value, descuentoToken: null, descuentoAutorizado: 0 })} />
-              {[5, 10].map((p) => (
-                <button key={p} type="button" className="chip" disabled={!totales.bruto}
-                  onClick={() => set({ descuento: String(r2(totales.bruto * p / 100)), descuentoToken: null, descuentoAutorizado: 0 })}>{p}%</button>
-              ))}
-            </div>
-            {totales.descuento > 0 && (
-              descuentoRequierePin ? (
-                descuentoCubierto
-                  ? <div className="form-help pos">Descuento de {totales.pct.toFixed(1)}% autorizado.</div>
-                  : <button type="button" className="btn btn-outline btn-sm" onClick={pedirDescuento}><Icon name="shield" size={14} /> {totales.pct.toFixed(1)}%: pedir autorización</button>
-              ) : <div className="form-help">{totales.pct.toFixed(1)}% de descuento.</div>
-            )}
-          </div>
+          {consulta.estado === 'error' && <div className="form-help">{consulta.mensaje}</div>}
 
           <div className="pagos">
             <div className="pagos-head">
@@ -486,34 +495,6 @@ export default function NuevaVenta({ sesion }) {
                     </>
                   )}
 
-                  {p.metodo === 'tarjeta' && (
-                    <div className="chip-row marcas-tarjeta">
-                      {MARCAS_TARJETA.map((m) => (
-                        <button key={m} type="button" className={`chip ${p.marca_tarjeta === m ? 'chip-on' : ''}`} onClick={() => setPago(i, { marca_tarjeta: m })}>{m}</button>
-                      ))}
-                    </div>
-                  )}
-                  {['tarjeta', 'qr'].includes(p.metodo) && (
-                    <div className="form-row compact-row">
-                      <select className="form-control" value={p.proveedor} onChange={(e) => setPago(i, { proveedor: e.target.value })}>
-                        {PROVEEDORES_POS.map((x) => <option key={x}>{x}</option>)}
-                      </select>
-                      {p.metodo === 'tarjeta' && (
-                        <div className="segmented">
-                          {[['debito', 'Débito'], ['credito', 'Crédito']].map(([id, l]) => (
-                            <button key={id} type="button" className={p.tipo_tarjeta === id ? 'active' : ''} onClick={() => setPago(i, { tipo_tarjeta: id })}>{l}</button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  {p.metodo !== 'efectivo' && (
-                    <div className="pago-monto">
-                      <span className="pago-etq">N° op.</span>
-                      <input className="form-control mono" maxLength={30} placeholder="N° de operación"
-                        value={p.nro_operacion} onChange={(e) => setPago(i, { nro_operacion: e.target.value.replace(/\s/g, '').toUpperCase() })} />
-                    </div>
-                  )}
                   {totales.items.length > 0 && erroresPago[i] && <div className="form-error">{erroresPago[i]}</div>}
                 </div>
               )
@@ -527,10 +508,8 @@ export default function NuevaVenta({ sesion }) {
           <div className="cart-totals">
             {totales.descPromos > 0 && <div className="cart-total-row"><span>Precio regular</span><span>{money(totales.regular)}</span></div>}
             {totales.descPromos > 0 && <div className="cart-total-row promo"><span>Promociones</span><span>- {money(totales.descPromos)}</span></div>}
-            {totales.descuento > 0 && <div className="cart-total-row"><span>Subtotal</span><span>{money(totales.bruto)}</span></div>}
-            {totales.descuento > 0 && <div className="cart-total-row"><span>Descuento</span><span>- {money(totales.descuento)}</span></div>}
             <div className="cart-total-row"><span>Op. gravada (sin IGV)</span><span>{money(totales.base)}</span></div>
-            <div className="cart-total-row"><span>IGV (18%)</span><span>{money(totales.igv)}</span></div>
+            <div className="cart-total-row"><span>IGV ({Math.round(Number(config.igv) * 100)}%)</span><span>{money(totales.igv)}</span></div>
             <div className="cart-total-row grand"><span>Total</span><span>{money(totales.total)}</span></div>
           </div>
 
@@ -542,6 +521,10 @@ export default function NuevaVenta({ sesion }) {
         </aside>
       </div>
 
+      {pos && (
+        <PosSimulado metodo={pos.metodo} monto={pos.monto} proveedor={config.pos_proveedor} marcas={config.marcas_tarjeta}
+          onDone={(r) => { pos.resolve(r); setPos(null) }} />
+      )}
       {comprobante && (
         <ComprobanteModal venta={comprobante} recienCreada
           onAnular={async () => {

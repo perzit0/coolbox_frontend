@@ -1,18 +1,26 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import Icon from './Icon'
 
+// Pila de modales abiertos: Escape solo cierra el de arriba (p. ej. el POS sobre la devolución).
+const pila = []
+
 /** Modal accesible: cierra con Escape o clic fuera. size: sm | md | lg */
 export default function Modal({ titulo, subtitulo, onClose, children, footer, size = 'md', as = 'div', onSubmit }) {
+  const cerrar = useRef(onClose)
+  cerrar.current = onClose
   useEffect(() => {
-    const onKey = (e) => { if (e.key === 'Escape') onClose?.() }
+    const id = Symbol('modal')
+    pila.push(id)
+    const onKey = (e) => { if (e.key === 'Escape' && pila[pila.length - 1] === id) cerrar.current?.() }
     document.addEventListener('keydown', onKey)
     document.body.classList.add('modal-open')
     return () => {
       document.removeEventListener('keydown', onKey)
-      document.body.classList.remove('modal-open')
+      pila.splice(pila.indexOf(id), 1)
+      if (pila.length === 0) document.body.classList.remove('modal-open')
     }
-  }, [onClose])
+  }, [])
 
   const Contenedor = as
   return createPortal(
