@@ -179,4 +179,23 @@ export const pedidosOnlineApi = {
   listar: (params) => api(`/pedidos-online${qs(params)}`),
   accion: (id, accion, payload) => api(`/pedidos-online/${id}/${accion}`, json('POST', payload || {})),
   reintentarComprobante: (id, tipo) => api(`/pedidos-online/${id}/comprobante/${tipo}`, json('POST', {})),
+  devolver: (id, payload) => api(`/pedidos-online/${id}/devoluciones`, json('POST', payload)),
+  reintentarNotaDevolucion: (id) => api(`/pedidos-online/devoluciones/${id}/comprobante`, json('POST', {})),
+}
+
+export const maestroClientesApi = {
+  listar: (params) => api(`/maestro-clientes${qs(params)}`),
+  resumen: () => api('/maestro-clientes/resumen'),
+  crear: (payload) => api('/maestro-clientes', json('POST', payload)),
+  editar: (id, payload) => api(`/maestro-clientes/${id}`, json('PUT', payload)),
+  cambiarEstado: (id, activo) => api(`/maestro-clientes/${id}/estado`, json('POST', { activo })),
+}
+
+export const integracionApi = {
+  estado: () => api('/integracion/estado'),
+  importar: () => api('/integracion/importar', json('POST', {})),
+  importarArchivo: (payload) => api('/integracion/importar-archivo', json('POST', payload)),
+  lotes: () => api('/integracion/lotes'),
+  lote: (id, estado) => api(`/integracion/lotes/${id}${qs({ estado })}`),
+  traza: (direccion) => api(`/integracion/traza${qs({ direccion })}`),
 }

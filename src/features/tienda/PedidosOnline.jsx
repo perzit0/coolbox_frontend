@@ -4,6 +4,7 @@ import { useFeedback } from '../../components/Feedback'
 import Icon from '../../components/Icon'
 import Modal from '../../components/Modal'
 import { ESTADO_SUNAT, fechaHora, money } from '../../utils/format'
+import DevolucionPedidoModal from './DevolucionPedidoModal'
 
 const TIPO_COMPROBANTE = { boleta: 'Boleta', nota_credito: 'Nota de crédito' }
 
@@ -11,7 +12,7 @@ const ESTADOS = {
   pendiente_pago: ['Pendiente de pago', 'badge-orange'], pagado: ['Pagado', 'badge-blue'],
   listo: ['Listo para recojo', 'badge-yellow'], entregado: ['Entregado', 'badge-green'], cancelado: ['Cancelado', 'badge-red'],
 }
-const PAGO = { tarjeta: 'Tarjeta', yape: 'Yape', plin: 'Plin', pagoefectivo: 'PagoEfectivo' }
+const PAGO = { tarjeta: 'Tarjeta', yape: 'Yape', plin: 'Plin', pagoefectivo: 'PagoEfectivo', transferencia: 'Transferencia' }
 
 /** Pedidos de la tienda online con recojo en sede: preparar, entregar (validando el documento) o cancelar. */
 export default function PedidosOnline() {
@@ -20,6 +21,7 @@ export default function PedidosOnline() {
   const [datos, setDatos] = useState(null)
   const [detalle, setDetalle] = useState(null)
   const [doc, setDoc] = useState('')
+  const [devolver, setDevolver] = useState(null)
 
   const cargar = () => pedidosOnlineApi.listar(f).then(setDatos).catch((e) => fb.error(e.detail))
   useEffect(() => { const t = setTimeout(cargar, 200); return () => clearTimeout(t) }, [f]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -41,6 +43,13 @@ export default function PedidosOnline() {
       setDetalle((d) => ({ ...r.pedido, entregar: d?.entregar })); cargar()
     } catch (e) { fb.error(e.detail) }
   }
+  const reintentarNota = async (dev) => {
+    try {
+      const r = await pedidosOnlineApi.reintentarNotaDevolucion(dev.id)
+      setDetalle(r.pedido); cargar()
+    } catch (e) { fb.error(e.detail) }
+  }
+  const abrirNota = (dev, formato) => abrirArchivo(`/pedidos-online/devoluciones/${dev.id}/comprobante/${formato}`).catch((e) => fb.error(e.detail))
   const abrir = (p, c, formato) => abrirArchivo(`/pedidos-online/${p.id}/comprobante/${c.tipo}/${formato}`).catch((e) => fb.error(e.detail))
   const c = datos?.conteo || {}
 
@@ -83,7 +92,10 @@ export default function PedidosOnline() {
                       <td className="small">{p.sede?.nombre}</td>
                       <td className="small">{PAGO[p.metodo_pago]}{p.marca_tarjeta ? ` ${p.marca_tarjeta} *${p.ultimos4}` : ''}{p.cip ? ` CIP ${p.cip}` : ''}</td>
                       <td className="num"><b>{money(p.total)}</b></td>
-                      <td><span className={`badge ${ESTADOS[p.estado][1]}`}>{ESTADOS[p.estado][0]}</span></td>
+                      <td>
+                        <span className={`badge ${ESTADOS[p.estado][1]}`}>{ESTADOS[p.estado][0]}</span>
+                        {p.estado_devolucion && <div className="cell-sub neg">{p.estado_devolucion === 'total' ? 'Devuelto' : 'Devolución parcial'} · {money(p.monto_devuelto)}</div>}
+                      </td>
                       <td>
                         <div className="pedido-acciones">
                           {p.estado === 'pendiente_pago' && <button type="button" className="btn btn-outline btn-sm" onClick={() => accion(p, 'confirmar-pago')}>Confirmar pago</button>}
@@ -102,6 +114,9 @@ export default function PedidosOnline() {
         <Modal titulo={`${detalle.entregar ? 'Entregar pedido' : 'Pedido'} ${detalle.codigo}`} subtitulo={`${detalle.cliente_nombre} · ${detalle.email}`} onClose={() => setDetalle(null)}
           footer={<>
             {!['entregado', 'cancelado'].includes(detalle.estado) && <button type="button" className="btn btn-ghost" onClick={() => cancelar(detalle)}>Cancelar pedido</button>}
+            {detalle.estado === 'entregado' && detalle.estado_devolucion !== 'total' && (
+              <button type="button" className="btn btn-outline" onClick={() => setDevolver(detalle)}><Icon name="undo" size={16} /> Registrar devolución</button>
+            )}
             {detalle.entregar
               ? <button type="button" className="btn btn-primary" disabled={doc.length < 6} onClick={() => accion(detalle, 'entregar', { nro_documento: doc })}><Icon name="check" size={16} /> Confirmar entrega</button>
               : <button type="button" className="btn btn-outline" onClick={() => setDetalle(null)}>Cerrar</button>}
@@ -132,6 +147,27 @@ export default function PedidosOnline() {
               ))}
             </div>
           )}
+          {(detalle.devoluciones || []).length > 0 && (
+            <div className="sunat-box">
+              {detalle.devoluciones.map((dv) => (
+                <div key={dv.id} className="sunat-row">
+                  <div>
+                    <strong>Devolución {dv.codigo}</strong> {money(dv.total)} por {PAGO[dv.metodo_reembolso] || dv.metodo_reembolso} (op. {dv.nro_operacion})
+                    <div className="cell-sub">{dv.detalles.map((x) => `${x.cantidad} x ${x.producto_nombre}`).join(', ')} · {dv.motivo}</div>
+                    <div className="cell-sub">Nota de crédito {dv.nota_credito || 'sin número'} · {fechaHora(dv.fecha)}{dv.autorizada_por ? ` · autorizó ${dv.autorizada_por}` : ''}</div>
+                  </div>
+                  <div className="actions-inline nowrap">
+                    <span className={`badge ${(ESTADO_SUNAT[dv.estado_sunat] || {}).clase || 'badge-gray'}`}>{(ESTADO_SUNAT[dv.estado_sunat] || {}).label || dv.estado_sunat}</span>
+                    {dv.tiene_pdf && <button type="button" className="btn btn-outline btn-sm" onClick={() => abrirNota(dv, 'pdf')}><Icon name="file" size={15} /> PDF</button>}
+                    {dv.tiene_xml && <button type="button" className="btn btn-ghost btn-sm" onClick={() => abrirNota(dv, 'xml')}>XML</button>}
+                    {['pendiente', 'error'].includes(dv.estado_sunat) && (
+                      <button type="button" className="btn btn-outline btn-sm" onClick={() => reintentarNota(dv)}><Icon name="refresh" size={15} /> Reintentar</button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
           <p className="small muted">Recojo en {detalle.sede?.nombre} ({detalle.sede?.direccion}). {detalle.entregado_por ? `Entregado por ${detalle.entregado_por} el ${fechaHora(detalle.fecha_entrega)}.` : ''}{detalle.motivo_cancelacion ? ` Motivo de cancelación: ${detalle.motivo_cancelacion}` : ''}</p>
           {detalle.entregar && (
             <div className="form-group">
@@ -141,6 +177,10 @@ export default function PedidosOnline() {
             </div>
           )}
         </Modal>
+      )}
+      {devolver && (
+        <DevolucionPedidoModal pedido={devolver} onClose={() => setDevolver(null)}
+          onDone={(p) => { setDevolver(null); setDetalle(p); cargar() }} />
       )}
     </>
   )

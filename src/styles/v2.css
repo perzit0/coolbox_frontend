@@ -506,3 +506,13 @@ a.btn, .btn { text-decoration: none; }
 .cliente-verificado { display: inline-flex; align-items: center; gap: 4px; font-size: 0.75rem; color: #15803d; font-weight: 600; }
 @keyframes pos-pulso { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.08); opacity: 0.7; } }
 .cliente-campos { display: grid; grid-template-columns: 1fr; gap: 0; }
+
+/* ---------- Integración de clientes ---------- */
+.integ-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-bottom: 16px; }
+.integ-card { padding: 18px 20px; display: flex; flex-direction: column; gap: 8px; }
+.integ-titulo { display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--cb-black); }
+.integ-url { display: flex; align-items: center; gap: 6px; background: #f3f4f6; border-radius: 6px; padding: 6px 10px; }
+.integ-url code { flex: 1; overflow-wrap: anywhere; font-size: .82rem; }
+.json-box { background: #111827; color: #e5e7eb; border-radius: 8px; padding: 12px; font-size: .8rem; max-height: 360px; overflow: auto; white-space: pre-wrap; }
+.devolucion-item { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; padding: 8px 0; border-bottom: 1px solid #eee; }
+.traza-detalle { max-width: 280px; overflow-wrap: anywhere; }

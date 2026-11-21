@@ -21,6 +21,8 @@ import MiCaja from './features/caja/MiCaja'
 import ControlCajas from './features/caja/ControlCajas'
 import Promociones from './features/tienda/Promociones'
 import PedidosOnline from './features/tienda/PedidosOnline'
+import MaestroClientes from './features/clientes/MaestroClientes'
+import Integracion from './features/clientes/Integracion'
 
 /** Página de inicio según el rol activo. */
 function inicioDeRol(rol) {
@@ -149,6 +151,8 @@ export default function App() {
         {puede('stock.actualizar') && <Route path="/almacen" element={<GestionStock />} />}
         {puede('promociones.gestionar') && <Route path="/promociones" element={<Promociones />} />}
         {puede('pedidos.gestionar') && <Route path="/pedidos-online" element={<PedidosOnline />} />}
+        {puede('clientes.gestionar') && <Route path="/clientes" element={<MaestroClientes />} />}
+        {puede('integracion.gestionar') && <Route path="/integracion" element={<Integracion />} />}
         <Route path="/mi-cuenta" element={<MiCuenta sesion={sesion} onUsuario={actualizarUsuario} />} />
         <Route path="*" element={<Navigate to={inicioDeRol(rol)} replace />} />
       </Routes>

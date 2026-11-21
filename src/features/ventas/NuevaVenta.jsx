@@ -18,6 +18,9 @@ const r2 = (n) => Math.round(Number(n || 0) * 100) / 100
 /* Los precios los fija la empresa (lista + promociones): en caja no hay descuentos manuales.
  * Tarjeta, Yape y Plin se cobran en el POS de pruebas, que genera el N° de operación. */
 const pagoNuevo = (metodo = 'efectivo') => ({ metodo, monto: '', monto_recibido: '' })
+// De dónde salió el nombre del cliente
+const FUENTE_CLIENTE = { CLIENTES: 'Cliente registrado' }
+
 const ventaVacia = () => ({ carrito: {}, clienteNombre: '', clienteDocumento: '', clienteFuente: '', pagos: [pagoNuevo()] })
 const limpiarBorrador = (b) => ({
   ...b,
@@ -63,9 +66,10 @@ export default function NuevaVenta({ sesion }) {
   useEffect(() => { cargarCaja() }, [])
   useEffect(() => { ventasApi.config().then(setConfig).catch(() => {}) }, [])
 
-  // Con DNI (8) o RUC (11) el nombre se completa solo (RENIEC / SUNAT). CE o sin servicio: a mano.
+  // Con DNI (8) o RUC (11) el nombre se completa solo: primero desde nuestro maestro de clientes
+  // (incluye los recibidos del grupo pareado) y si no está, desde RENIEC / SUNAT. CE: a mano.
   useEffect(() => {
-    if (![8, 11].includes(clienteDocumento.length) || !config.consulta_documento) {
+    if (![8, 11].includes(clienteDocumento.length)) {
       setConsulta({ estado: 'idle', mensaje: '' })
       return undefined
     }
@@ -82,7 +86,7 @@ export default function NuevaVenta({ sesion }) {
       })
     }, 300)
     return () => { vivo = false; clearTimeout(t) }
-  }, [clienteDocumento, config.consulta_documento]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [clienteDocumento]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const cambiarDocumento = (valor) => {
     const doc = valor.replace(/\D/g, '')
@@ -434,7 +438,7 @@ export default function NuevaVenta({ sesion }) {
             <div className="form-group compact">
               <label>
                 Cliente {clienteFuente
-                  ? <span className="cliente-verificado"><Icon name="check" size={12} /> {clienteFuente}</span>
+                  ? <span className="cliente-verificado"><Icon name="check" size={12} /> {FUENTE_CLIENTE[clienteFuente] || clienteFuente}</span>
                   : <span className="neg">(obligatorio)</span>}
               </label>
               <input className="form-control" maxLength={180} value={clienteNombre} readOnly={Boolean(clienteFuente)}
